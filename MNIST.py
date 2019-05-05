@@ -191,13 +191,13 @@ else:
 net = build_model(args, device, ckpt=ckpt)
 criterion = nn.CrossEntropyLoss()
 optimizer = create_optimizer(args, net.parameters())
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=150, gamma=0.1,
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=15, gamma=0.1,
                                           last_epoch=start_epoch)
 
 train_accuracies = []
 test_accuracies = []
 
-for epoch in range(start_epoch + 1, 200):
+for epoch in range(start_epoch + 1, 20):
     scheduler.step()
     train_acc = train(net, epoch, device, train_loader, optimizer, criterion)
     test_acc = test(net, device, test_loader, criterion)
@@ -217,6 +217,7 @@ if test_acc > best_acc:
 
        train_accuracies.append(train_acc)
        test_accuracies.append(test_acc)
+        print(train_accuracies)
        if not os.path.isdir('curve'):
            os.mkdir('curve')
        torch.save({'train_acc': train_accuracies, 'test_acc': test_accuracies},
