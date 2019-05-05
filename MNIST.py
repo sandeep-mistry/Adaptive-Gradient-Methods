@@ -115,8 +115,8 @@ def create_optimizer(args, model_params):
                           weight_decay=args.weight_decay, amsgrad=True)
     elif args.optim == 'adabound':
         return AdaBound(model_params, args.lr, betas=(args.beta1, args.beta2),
-                        final_lr=args.final_lr, gamma=args.gamma,
-                        weight_decay=args.weight_decay)
+                        final_lr=args.final_lr, gamma=args.gamma)
+#                         weight_decay=args.weight_decay)
     else:
         assert args.optim == 'amsbound'
         return AdaBound(model_params, args.lr, betas=(args.beta1, args.beta2),
