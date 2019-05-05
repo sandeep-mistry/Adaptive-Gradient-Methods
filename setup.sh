@@ -1,6 +1,6 @@
 # !/bin/bash
 
-ENV=DL1
+ENV=DL
 
 echo Creating environment
 conda env remove --name $ENV
