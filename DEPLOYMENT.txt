@@ -1,0 +1,38 @@
+ECS GPU Server Deployment Guide
+A set of instructions on how to connect to the ECS GPU server and run our code.
+
+Required Credentials
+<username> - UoS username (e.g. sbm1g18) without @soton.ac.uk
+<password> - UoS password
+
+1. Connecting
+    Must be on the Southampton Eduroam network or using a VPN 
+    (https://www.southampton.ac.uk/ageing/postgraduate/taught_courses/dl_welcome/vpn.page)
+    In a terminal (or using Putty) ssh to <username>@yann.ecs.soton.ac.uk.
+    When prompted, enter <password>
+    You should now be connected to the GPU server. 
+
+2. Clone Repo
+    Run `git clone https://git.soton.ac.uk/sbm1g18/gradient-methods.git`
+    Enter required credentials for gitlab (should be the same as above)
+    The repo should now have been cloned.
+    
+3. Run setup
+    Move into the repo folder ('cd gradient-methods').
+    Execute './setup.sh'
+    If you get error "Permission denied", run 'chmod 755 setup.sh', then execute './setup.sh'
+    This will also initialise a Conda environment.
+
+4. Activate Conda environment
+    Execute 'conda activate DL'
+    This sets the conda working environment to the one just created.
+
+5. Install required packages
+    Execute './setup_env.sh'
+    If you get error "Permission denied", run 'chmod 755 setup_env.sh', then execute './setup_env.sh'
+    This will install all the packages in requirements.txt
+
+6. Running code
+    Ensure that the conda environment is active (conda activate DL)
+    Execute 'python FILENAME'
+
