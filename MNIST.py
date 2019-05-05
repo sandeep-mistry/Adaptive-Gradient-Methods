@@ -18,12 +18,12 @@ def get_parser():
     parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
     parser.add_argument('--model', default='SLP_model', type=str, help='model',
                         choices=['resnet', 'densenet', 'Simple_MLP','MLP_Dropout','SLP_model'])
-    parser.add_argument('--optim', default='adabound', type=str, help='optimizer',
+    parser.add_argument('--optim', default='adagrad', type=str, help='optimizer',
                         choices=['sgd', 'adagrad', 'adam', 'amsgrad', 'adabound', 'amsbound'])
-    parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
-    parser.add_argument('--final_lr', default=0.001, type=float,
+    parser.add_argument('--lr', default=5e-2, type=float, help='learning rate')
+    parser.add_argument('--final_lr', default=5e-4, type=float,
                         help='final learning rate of AdaBound')
-    parser.add_argument('--gamma', default=0.1, type=float,
+    parser.add_argument('--gamma', default=0.5, type=float,
                         help='convergence speed term of AdaBound')
     parser.add_argument('--momentum', default=0.9, type=float, help='momentum term')
     parser.add_argument('--beta1', default=0.9, type=float, help='Adam coefficients beta_1')
@@ -60,8 +60,8 @@ def build_dataset():
     return train_loader, test_loader
 
 
-def get_ckpt_name(model='SLP_model', optimizer='adabound', lr=0.001, final_lr=0.001, momentum=0.9,
-                  beta1=0.9, beta2=0.999, gamma=0.1):
+def get_ckpt_name(model='SLP_model', optimizer='adagrad', lr=5e-2, final_lr=5e-4, momentum=0.9,
+                  beta1=0.9, beta2=0.999, gamma=0.5):
     name = {
         'sgd': 'lr{}-momentum{}'.format(lr, momentum),
         'adagrad': 'lr{}'.format(lr),
@@ -106,7 +106,7 @@ def create_optimizer(args, model_params):
         return optim.SGD(model_params, args.lr, momentum=args.momentum,
                          weight_decay=args.weight_decay)
     elif args.optim == 'adagrad':
-        return optim.Adagrad(model_params, args.lr, weight_decay=args.weight_decay)
+        return optim.Adagrad(model_params, args.lr)#, weight_decay=args.weight_decay)
     elif args.optim == 'adam':
         return optim.Adam(model_params, args.lr, betas=(args.beta1, args.beta2),
                           weight_decay=args.weight_decay)
@@ -191,7 +191,7 @@ else:
 net = build_model(args, device, ckpt=ckpt)
 criterion = nn.CrossEntropyLoss()
 optimizer = create_optimizer(args, net.parameters())
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.1,
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=18, gamma=0.5,
                                           last_epoch=start_epoch)
 
 train_accuracies = []
