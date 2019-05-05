@@ -15,9 +15,9 @@ from adabound import AdaBound
 
 def get_parser():
     parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
-    parser.add_argument('--model', default='Alexnet', type=str, help='model',
+    parser.add_argument('--model', default='resnet', type=str, help='model',
                         choices=['resnet', 'densenet','Alexnet'])
-    parser.add_argument('--optim', default='adagrad', type=str, help='optimizer',
+    parser.add_argument('--optim', default='sgd', type=str, help='optimizer',
                         choices=['sgd', 'adagrad', 'adam', 'amsgrad', 'adabound', 'amsbound'])
     parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
     parser.add_argument('--final_lr', default=0.1, type=float,
@@ -69,7 +69,7 @@ def build_dataset():
     return train_loader, test_loader
 
 
-def get_ckpt_name(model='Alexnet', optimizer='adagrad', lr=0.1, final_lr=0.1, momentum=0.9,
+def get_ckpt_name(model='resnet', optimizer='sgd', lr=0.1, final_lr=0.1, momentum=0.9,
                   beta1=0.9, beta2=0.999, gamma=1e-3):
     name = {
         'sgd': 'lr{}-momentum{}'.format(lr, momentum),
@@ -109,7 +109,7 @@ def build_model(args, device, ckpt=None):
 
 
 def create_optimizer(args, model_params):
-    if args.optim == 'adagrad':
+    if args.optim == 'sgd':
         return optim.SGD(model_params, args.lr, momentum=args.momentum,
                          weight_decay=args.weight_decay)
     elif args.optim == 'adagrad':
@@ -198,13 +198,13 @@ else:
 net = build_model(args, device, ckpt=ckpt)
 criterion = nn.CrossEntropyLoss()
 optimizer = create_optimizer(args, net.parameters())
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=15, gamma=0.1,
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=150, gamma=0.1,
                                           last_epoch=start_epoch)
 
 train_accuracies = []
 test_accuracies = []
 
-for epoch in range(start_epoch + 1, 20):
+for epoch in range(start_epoch + 1, 200):
     scheduler.step()
     train_acc = train(net, epoch, device, train_loader, optimizer, criterion)
     test_acc = test(net, device, test_loader, criterion)
