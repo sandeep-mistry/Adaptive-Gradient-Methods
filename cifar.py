@@ -36,7 +36,7 @@ def get_parser():
 def build_dataset():
     print('==> Preparing data..')
     transform_train = transforms.Compose([
-        transforms.Resize(512),
+        transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
@@ -198,13 +198,13 @@ else:
 net = build_model(args, device, ckpt=ckpt)
 criterion = nn.CrossEntropyLoss()
 optimizer = create_optimizer(args, net.parameters())
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=75, gamma=0.1,
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=150, gamma=0.1,
                                           last_epoch=start_epoch)
 
 train_accuracies = []
 test_accuracies = []
 
-for epoch in range(start_epoch + 1, 100):
+for epoch in range(start_epoch + 1, 200):
     scheduler.step()
     train_acc = train(net, epoch, device, train_loader, optimizer, criterion)
     test_acc = test(net, device, test_loader, criterion)
