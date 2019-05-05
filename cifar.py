@@ -49,12 +49,12 @@ def build_dataset():
 
     trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True,
                                             transform=transform_train)
-    train_loader = torch.utils.data.DataLoader(trainset, batch_size=64, shuffle=True,
+    train_loader = torch.utils.data.DataLoader(trainset, batch_size=32, shuffle=True,
                                                num_workers=2)
 
     testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True,
                                            transform=transform_test)
-    test_loader = torch.utils.data.DataLoader(testset, batch_size=32, shuffle=False, num_workers=2)
+    test_loader = torch.utils.data.DataLoader(testset, batch_size=16, shuffle=False, num_workers=2)
 
     # classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
     # trainset = torchvision.datasets.SVHN(root='./data', train=True, download=True,
@@ -181,7 +181,7 @@ parser = get_parser()
 args = parser.parse_args()
 
 train_loader, test_loader = build_dataset()
-device = 'cuda:1' if torch.cuda.is_available() else 'cpu'
+device = 'cuda:2' if torch.cuda.is_available() else 'cpu'
 
 ckpt_name = get_ckpt_name(model=args.model, optimizer=args.optim, lr=args.lr,
                               final_lr=args.final_lr, momentum=args.momentum,
