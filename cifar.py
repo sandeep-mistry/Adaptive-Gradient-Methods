@@ -181,7 +181,7 @@ parser = get_parser()
 args = parser.parse_args()
 
 train_loader, test_loader = build_dataset()
-device = 'cuda:2' if torch.cuda.is_available() else 'cpu'
+device = 'cuda:1' if torch.cuda.is_available() else 'cpu'
 
 ckpt_name = get_ckpt_name(model=args.model, optimizer=args.optim, lr=args.lr,
                               final_lr=args.final_lr, momentum=args.momentum,
@@ -198,13 +198,13 @@ else:
 net = build_model(args, device, ckpt=ckpt)
 criterion = nn.CrossEntropyLoss()
 optimizer = create_optimizer(args, net.parameters())
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=150, gamma=0.1,
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=75, gamma=0.1,
                                           last_epoch=start_epoch)
 
 train_accuracies = []
 test_accuracies = []
 
-for epoch in range(start_epoch + 1, 200):
+for epoch in range(start_epoch + 1, 100):
     scheduler.step()
     train_acc = train(net, epoch, device, train_loader, optimizer, criterion)
     test_acc = test(net, device, test_loader, criterion)
