@@ -203,7 +203,7 @@ for epoch in range(start_epoch + 1, 20):
     test_acc = test(net, device, test_loader, criterion)
 
 # Save checkpoint.
-if test_acc > best_acc:
+    if test_acc > best_acc:
        print('Saving..')
        state = {
            'net': net.state_dict(),
