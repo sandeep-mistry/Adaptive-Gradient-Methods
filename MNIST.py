@@ -217,7 +217,7 @@ if test_acc > best_acc:
 
        train_accuracies.append(train_acc)
        test_accuracies.append(test_acc)
-        print(train_accuracies)
+       print(train_accuracies)
        if not os.path.isdir('curve'):
            os.mkdir('curve')
        torch.save({'train_acc': train_accuracies, 'test_acc': test_accuracies},
