@@ -191,7 +191,7 @@ else:
 net = build_model(args, device, ckpt=ckpt)
 criterion = nn.CrossEntropyLoss()
 optimizer = create_optimizer(args, net.parameters())
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.1,
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=18, gamma=0.1,
                                           last_epoch=start_epoch)
 
 train_accuracies = []
