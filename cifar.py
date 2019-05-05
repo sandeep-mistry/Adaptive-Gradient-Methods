@@ -15,7 +15,7 @@ from adabound import AdaBound
 
 def get_parser():
     parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
-    parser.add_argument('--model', default='resnet', type=str, help='model',
+    parser.add_argument('--model', default='densenet', type=str, help='model',
                         choices=['resnet', 'densenet','Alexnet'])
     parser.add_argument('--optim', default='sgd', type=str, help='optimizer',
                         choices=['sgd', 'adagrad', 'adam', 'amsgrad', 'adabound', 'amsbound'])
