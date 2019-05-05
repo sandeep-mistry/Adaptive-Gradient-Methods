@@ -23,7 +23,7 @@ def get_parser():
     parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
     parser.add_argument('--final_lr', default=0.001, type=float,
                         help='final learning rate of AdaBound')
-    parser.add_argument('--gamma', default=1e-3, type=float,
+    parser.add_argument('--gamma', default=1, type=float,
                         help='convergence speed term of AdaBound')
     parser.add_argument('--momentum', default=0.9, type=float, help='momentum term')
     parser.add_argument('--beta1', default=0.9, type=float, help='Adam coefficients beta_1')
@@ -61,7 +61,7 @@ def build_dataset():
 
 
 def get_ckpt_name(model='SLP_model', optimizer='adabound', lr=0.001, final_lr=0.001, momentum=0.9,
-                  beta1=0.9, beta2=0.999, gamma=1e-3):
+                  beta1=0.9, beta2=0.999, gamma=1):
     name = {
         'sgd': 'lr{}-momentum{}'.format(lr, momentum),
         'adagrad': 'lr{}'.format(lr),
@@ -191,7 +191,7 @@ else:
 net = build_model(args, device, ckpt=ckpt)
 criterion = nn.CrossEntropyLoss()
 optimizer = create_optimizer(args, net.parameters())
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=18, gamma=0.1,
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=100, gamma=1,
                                           last_epoch=start_epoch)
 
 train_accuracies = []
