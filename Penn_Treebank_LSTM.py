@@ -5,18 +5,21 @@ import torch.nn as nn
 import numpy as np
 from torch.nn.utils import clip_grad_norm_
 from data_utils import Dictionary, Corpus
+from models.One_Layer_LSTM import RNNLM
+from models.Two_Layer_LSTM import RNNLM_2
+from models.Three_Layer_LSTM import RNNLM_3
+from adabound import AdaBound
+import os
+import argparse
+from __future__ import print_function
 
-# Device configuration
-# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# device = "cuda:0"
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
     print("Running with GPU Acceleration")
 else:
     device = torch.device('cpu')
     print("Running on CPU")
-
 
 # Hyper-parameters
 embed_size = 128
@@ -34,31 +37,7 @@ ids = corpus.get_data('data/train.txt', batch_size)
 vocab_size = len(corpus.dictionary)
 num_batches = ids.size(1) // seq_length
 
-
-# RNN based language model
-class RNNLM(nn.Module):
-    def __init__(self, vocab_size, embed_size, hidden_size, num_layers):
-        super(RNNLM, self).__init__()
-        self.embed = nn.Embedding(vocab_size, embed_size)
-        self.lstm = nn.LSTM(embed_size, hidden_size, num_layers, batch_first=True)
-        self.linear = nn.Linear(hidden_size, vocab_size)
-
-    def forward(self, x, h):
-        # Embed word ids to vectors
-        x = self.embed(x)
-
-        # Forward propagate LSTM
-        out, (h, c) = self.lstm(x, h)
-
-        # Reshape output to (batch_size*sequence_length, hidden_size)
-        out = out.reshape(out.size(0) * out.size(1), out.size(2))
-
-        # Decode hidden states of all time steps
-        out = self.linear(out)
-        return out, (h, c)
-
-
-model = RNNLM(vocab_size, embed_size, hidden_size, num_layers).to(device)
+model = RNNLM_3(vocab_size, embed_size, hidden_size, num_layers).to(device)
 
 # Loss and optimizer
 criterion = nn.CrossEntropyLoss()
