@@ -16,11 +16,11 @@ from adabound import AdaBound
 
 def get_parser():
     parser = argparse.ArgumentParser(description='PyTorch MNIST Training')
-    parser.add_argument('--model', default='SLP_model', type=str, help='model',
+    parser.add_argument('--model', default='MLP_Dropout', type=str, help='model',
                         choices=['resnet', 'densenet', 'Simple_MLP','MLP_Dropout','SLP_model'])
-    parser.add_argument('--optim', default='amsbound', type=str, help='optimizer',
+    parser.add_argument('--optim', default='sgd', type=str, help='optimizer',
                         choices=['sgd', 'adagrad', 'adam', 'amsgrad', 'adabound', 'amsbound'])
-    parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
+    parser.add_argument('--lr', default=1, type=float, help='learning rate')
     parser.add_argument('--final_lr', default=0.001, type=float,
                         help='final learning rate of AdaBound')
     parser.add_argument('--gamma', default=0.1, type=float,
@@ -49,18 +49,26 @@ def build_dataset():
         # transforms.Normalize((0.4914), (0.2023)),
     ])
 
-    trainset = torchvision.datasets.MNIST(root='./data', train=True, download=True,
+#     trainset = torchvision.datasets.MNIST(root='./data', train=True, download=True,
+#                                             transform=transform_train)
+#     train_loader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True)
+
+#     testset = torchvision.datasets.MNIST(root='./data', train=False, download=True,
+#                                            transform=transform_test)
+#     test_loader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False)
+
+    trainset = torchvision.datasets.FashionMNIST(root='./data', train=True, download=True,
                                             transform=transform_train)
     train_loader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True)
 
-    testset = torchvision.datasets.MNIST(root='./data', train=False, download=True,
+    testset = torchvision.datasets.FashionMNIST(root='./data', train=False, download=True,
                                            transform=transform_test)
     test_loader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False)
 
     return train_loader, test_loader
 
 
-def get_ckpt_name(model='SLP_model', optimizer='amsbound', lr=0.001, final_lr=0.001, momentum=0.9,
+def get_ckpt_name(model='MLP_Dropout', optimizer='sgd', lr=1, final_lr=0.001, momentum=0.9,
                   beta1=0.9, beta2=0.999, gamma=0.1):
     name = {
         'sgd': 'lr{}-momentum{}'.format(lr, momentum),
@@ -198,7 +206,7 @@ else:
 net = build_model(args, device, ckpt=ckpt)
 criterion = nn.CrossEntropyLoss()
 optimizer = create_optimizer(args, net.parameters())
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.1,
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1,
                                           last_epoch=start_epoch)
 
 train_accuracies = []
