@@ -20,10 +20,10 @@ def get_parser():
                         choices=['resnet', 'densenet', 'Simple_MLP','MLP_Dropout','SLP_model'])
     parser.add_argument('--optim', default='sgd', type=str, help='optimizer',
                         choices=['sgd', 'adagrad', 'adam', 'amsgrad', 'adabound', 'amsbound'])
-    parser.add_argument('--lr', default=1, type=float, help='learning rate')
-    parser.add_argument('--final_lr', default=0.001, type=float,
+    parser.add_argument('--lr', default=5e-2, type=float, help='learning rate')
+    parser.add_argument('--final_lr', default=5e-4, type=float,
                         help='final learning rate of AdaBound')
-    parser.add_argument('--gamma', default=0.1, type=float,
+    parser.add_argument('--gamma', default=0.5, type=float,
                         help='convergence speed term of AdaBound')
     parser.add_argument('--momentum', default=0.9, type=float, help='momentum term')
     parser.add_argument('--beta1', default=0.9, type=float, help='Adam coefficients beta_1')
@@ -68,8 +68,8 @@ def build_dataset():
     return train_loader, test_loader
 
 
-def get_ckpt_name(model='MLP_Dropout', optimizer='sgd', lr=1, final_lr=0.001, momentum=0.9,
-                  beta1=0.9, beta2=0.999, gamma=0.1):
+def get_ckpt_name(model='MLP_Dropout', optimizer='sgd', lr=5e-2, final_lr=5e-4, momentum=0.9,
+                  beta1=0.9, beta2=0.999, gamma=0.5):
     name = {
         'sgd': 'lr{}-momentum{}'.format(lr, momentum),
         'adagrad': 'lr{}'.format(lr),
@@ -206,7 +206,7 @@ else:
 net = build_model(args, device, ckpt=ckpt)
 criterion = nn.CrossEntropyLoss()
 optimizer = create_optimizer(args, net.parameters())
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1,
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=18, gamma=0.5,
                                           last_epoch=start_epoch)
 
 train_accuracies = []
