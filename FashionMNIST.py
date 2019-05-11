@@ -79,8 +79,8 @@ def build_dataset():
     return train_loader, test_loader
 
 
-def get_ckpt_name(model='Simple_MLP', optimizer='sgd', lr=0.1, final_lr=0.1, momentum=0.9,
-                  beta1=0.9, beta2=0.999, gamma=1e-3):
+def get_ckpt_name(model='SLP_model', optimizer='amsgrad', lr=1e-2, final_lr=1e-4, momentum=0.9,
+                  beta1=0.99, beta2=0.999, gamma=0.5):
     name = {
         'sgd': 'lr{}-momentum{}'.format(lr, momentum),
         'adagrad': 'lr{}'.format(lr),
@@ -107,6 +107,7 @@ def build_model(args, device, ckpt=None):
         'densenet': DenseNet121,
         'Simple_MLP': MLP,
         'MLP_Dropout': MLP_drop,
+        'SLP_model': S_L_P,
     }[args.model]()
     net = net.to(device)
     if device == 'cuda':
@@ -121,20 +122,24 @@ def build_model(args, device, ckpt=None):
 
 def create_optimizer(args, model_params):
     if args.optim == 'sgd':
-        return optim.SGD(model_params, args.lr, momentum=args.momentum,
-                         weight_decay=args.weight_decay)
+#         return optim.SGD(model_params, args.lr, momentum=args.momentum,
+#                          weight_decay=args.weight_decay)
+        return optim.SGD(model_params, args.lr, momentum=args.momentum)
     elif args.optim == 'adagrad':
-        return optim.Adagrad(model_params, args.lr, weight_decay=args.weight_decay)
+        return optim.Adagrad(model_params, args.lr)#, weight_decay=args.weight_decay)
     elif args.optim == 'adam':
-        return optim.Adam(model_params, args.lr, betas=(args.beta1, args.beta2),
-                          weight_decay=args.weight_decay)
+#         return optim.Adam(model_params, args.lr, betas=(args.beta1, args.beta2),
+#                           weight_decay=args.weight_decay)
+        return optim.Adam(model_params, args.lr, betas=(args.beta1, args.beta2))
     elif args.optim == 'amsgrad':
+#         return optim.Adam(model_params, args.lr, betas=(args.beta1, args.beta2),
+#                           weight_decay=args.weight_decay, amsgrad=True)
         return optim.Adam(model_params, args.lr, betas=(args.beta1, args.beta2),
-                          weight_decay=args.weight_decay, amsgrad=True)
+                          amsgrad=True)
     elif args.optim == 'adabound':
         return AdaBound(model_params, args.lr, betas=(args.beta1, args.beta2),
-                        final_lr=args.final_lr, gamma=args.gamma,
-                        weight_decay=args.weight_decay)
+                        final_lr=args.final_lr, gamma=args.gamma)
+#                         weight_decay=args.weight_decay)
     else:
         assert args.optim == 'amsbound'
         return AdaBound(model_params, args.lr, betas=(args.beta1, args.beta2),
@@ -192,7 +197,7 @@ parser = get_parser()
 args = parser.parse_args()
 
 train_loader, test_loader = build_dataset()
-device = 'cuda:1' if torch.cuda.is_available() else 'cpu'
+device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
 ckpt_name = get_ckpt_name(model=args.model, optimizer=args.optim, lr=args.lr,
                               final_lr=args.final_lr, momentum=args.momentum,
@@ -209,36 +214,36 @@ else:
 net = build_model(args, device, ckpt=ckpt)
 criterion = nn.CrossEntropyLoss()
 optimizer = create_optimizer(args, net.parameters())
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=15, gamma=0.1,
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=18, gamma=0.5,
                                           last_epoch=start_epoch)
 
 train_accuracies = []
 test_accuracies = []
 
-for epoch in range(start_epoch + 1, 20):
+for epoch in range(start_epoch + 1, 100):
     scheduler.step()
     train_acc = train(net, epoch, device, train_loader, optimizer, criterion)
     test_acc = test(net, device, test_loader, criterion)
 
 # Save checkpoint.
-if test_acc > best_acc:
-       print('Saving..')
-       state = {
-           'net': net.state_dict(),
-           'acc': test_acc,
-           'epoch': epoch,
-       }
-       if not os.path.isdir('checkpoint'):
-            os.mkdir('checkpoint')
-       torch.save(state, os.path.join('checkpoint', ckpt_name))
-       best_acc = test_acc
+    print('Saving..')
+    state = {
+        'net': net.state_dict(),
+        'acc': test_acc,
+        'epoch': epoch,
+    }
+    if not os.path.isdir('checkpoint'):
+         os.mkdir('checkpoint')
+    torch.save(state, os.path.join('checkpoint', ckpt_name))
+    best_acc = test_acc
 
-       train_accuracies.append(train_acc)
-       test_accuracies.append(test_acc)
-       if not os.path.isdir('curve'):
-           os.mkdir('curve')
-       torch.save({'train_acc': train_accuracies, 'test_acc': test_accuracies},
-                   os.path.join('curve', ckpt_name))
+    train_accuracies.append(train_acc)
+    test_accuracies.append(test_acc)
+    if not os.path.isdir('curve'):
+        os.mkdir('curve')
+    torch.save({'train_acc': train_accuracies, 'test_acc': test_accuracies},
+                os.path.join('curve', ckpt_name))
+       
 
 
 
