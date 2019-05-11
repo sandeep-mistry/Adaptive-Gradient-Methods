@@ -15,15 +15,15 @@ from adabound import AdaBound
 
 
 def get_parser():
-    parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
+    parser = argparse.ArgumentParser(description='PyTorch FashionMNIST Training')
     parser.add_argument('--model', default='Simple_MLP', type=str, help='model',
                         choices=['resnet', 'densenet', 'Simple_MLP','MLP_Dropout'])
     parser.add_argument('--optim', default='sgd', type=str, help='optimizer',
                         choices=['sgd', 'adagrad', 'adam', 'amsgrad', 'adabound', 'amsbound'])
-    parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
-    parser.add_argument('--final_lr', default=0.1, type=float,
+    parser.add_argument('--lr', default=100, type=float, help='learning rate')
+    parser.add_argument('--final_lr', default=0.01, type=float,
                         help='final learning rate of AdaBound')
-    parser.add_argument('--gamma', default=1e-3, type=float,
+    parser.add_argument('--gamma', default=0.1, type=float,
                         help='convergence speed term of AdaBound')
     parser.add_argument('--momentum', default=0.9, type=float, help='momentum term')
     parser.add_argument('--beta1', default=0.9, type=float, help='Adam coefficients beta_1')
@@ -214,7 +214,7 @@ else:
 net = build_model(args, device, ckpt=ckpt)
 criterion = nn.CrossEntropyLoss()
 optimizer = create_optimizer(args, net.parameters())
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=18, gamma=0.5,
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=18, gamma=0.1,
                                           last_epoch=start_epoch)
 
 train_accuracies = []
