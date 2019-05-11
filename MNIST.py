@@ -104,7 +104,7 @@ def build_model(args, device, ckpt=None):
 def create_optimizer(args, model_params):
     if args.optim == 'sgd':
 #         return optim.SGD(model_params, args.lr, momentum=args.momentum,
-                         weight_decay=args.weight_decay)
+#                          weight_decay=args.weight_decay)
         return optim.SGD(model_params, args.lr, momentum=args.momentum)
     elif args.optim == 'adagrad':
         return optim.Adagrad(model_params, args.lr)#, weight_decay=args.weight_decay)
