@@ -20,8 +20,8 @@ def get_parser():
                         choices=['resnet', 'densenet', 'Simple_MLP','MLP_Dropout'])
     parser.add_argument('--optim', default='sgd', type=str, help='optimizer',
                         choices=['sgd', 'adagrad', 'adam', 'amsgrad', 'adabound', 'amsbound'])
-    parser.add_argument('--lr', default=5e-2, type=float, help='learning rate')
-    parser.add_argument('--final_lr', default=5e-4, type=float,
+    parser.add_argument('--lr', default=1e-2, type=float, help='learning rate')
+    parser.add_argument('--final_lr', default=1e-4, type=float,
                         help='final learning rate of AdaBound')
     parser.add_argument('--gamma', default=0.1, type=float,
                         help='convergence speed term of AdaBound')
@@ -79,7 +79,7 @@ def build_dataset():
     return train_loader, test_loader
 
 
-def get_ckpt_name(model='SLP_model', optimizer='sgd', lr=5e-2, final_lr=5e-4, momentum=0.9,
+def get_ckpt_name(model='SLP_model', optimizer='sgd', lr=1e-2, final_lr=1e-4, momentum=0.9,
                   beta1=0.99, beta2=0.999, gamma=0.1):
     name = {
         'sgd': 'lr{}-momentum{}'.format(lr, momentum),
