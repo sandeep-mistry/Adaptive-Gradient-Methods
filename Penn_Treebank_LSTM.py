@@ -12,6 +12,28 @@ from adabound import AdaBound
 import os
 import argparse
 from __future__ import print_function
+import torch.backends.cudnn as cudnn
+import torch.optim as optim
+
+
+def get_parser():
+    parser = argparse.ArgumentParser(description='PyTorch Penn Treebank Training')
+    parser.add_argument('--model', default='One_Layer_LSTM', type=str, help='model',
+                        choices=['One_Layer_LSTM','Two_Layer_LSTM','Three_Layer_LSTM'])
+    parser.add_argument('--optim', default='adabound', type=str, help='optimizer',
+                        choices=['sgd','adam','adabound', 'amsbound'])
+    parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
+    parser.add_argument('--final_lr', default=0.001, type=float,
+                        help='final learning rate of AdaBound')
+    parser.add_argument('--gamma', default=0.1, type=float,
+                        help='convergence speed term of AdaBound')
+    parser.add_argument('--momentum', default=0.9, type=float, help='momentum term')
+    parser.add_argument('--beta1', default=0.9, type=float, help='Adam coefficients beta_1')
+    parser.add_argument('--beta2', default=0.999, type=float, help='Adam coefficients beta_2')
+    parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
+    parser.add_argument('--weight_decay', default=5e-4, type=float,
+                        help='weight decay for optimizers')
+    return parser
 
 
 if torch.cuda.is_available():
@@ -37,17 +59,82 @@ ids = corpus.get_data('data/train.txt', batch_size)
 vocab_size = len(corpus.dictionary)
 num_batches = ids.size(1) // seq_length
 
-model = RNNLM_3(vocab_size, embed_size, hidden_size, num_layers).to(device)
+def get_ckpt_name(model='One_Layer_LSTM', optimizer='adabound', lr=0.001, final_lr=0.001, momentum=0.9,
+                  beta1=0.9, beta2=0.999, gamma=0.1):
+    name = {
+        'sgd': 'lr{}-momentum{}'.format(lr, momentum),
+        'adagrad': 'lr{}'.format(lr),
+        'adam': 'lr{}-betas{}-{}'.format(lr, beta1, beta2),
+        'amsgrad': 'lr{}-betas{}-{}'.format(lr, beta1, beta2),
+        'adabound': 'lr{}-betas{}-{}-final_lr{}-gamma{}'.format(lr, beta1, beta2, final_lr, gamma),
+        'amsbound': 'lr{}-betas{}-{}-final_lr{}-gamma{}'.format(lr, beta1, beta2, final_lr, gamma),
+    }[optimizer]
+    return '{}-{}-{}'.format(model, optimizer, name)
+
+
+def load_checkpoint(ckpt_name):
+    print('==> Resuming from checkpoint..')
+    path = os.path.join('checkpoint', ckpt_name)
+    assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
+    assert os.path.exists(path), 'Error: checkpoint {} not found'.format(ckpt_name)
+    return torch.load(ckpt_name)
+
+def build_model(args, device, ckpt=None):
+    print('==> Building model..')
+    net = {
+        'One_Layer_LSTM': RNNLM,
+        'Two_Layer_LSTM': RNNLM_2,
+        'Thre_Layer_LSTM': RNNLM_3,
+    }[args.model](vocab_size, embed_size, hidden_size, num_layers)
+    net = net.to(device)
+    if device == 'cuda':
+        net = torch.nn.DataParallel(net)
+        cudnn.benchmark = True
+
+    if ckpt:
+        net.load_state_dict(ckpt['net'])
+
+    return net
+
+# model = RNNLM_3(vocab_size, embed_size, hidden_size, num_layers).to(device)
 
 # Loss and optimizer
-criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+# criterion = nn.CrossEntropyLoss()
+# optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+
+def create_optimizer(args, model_params):
+    if args.optim == 'sgd':
+        return optim.SGD(model_params, args.lr, momentum=args.momentum)
+    elif args.optim == 'adam':
+        return optim.Adam(model_params, args.lr, betas=(args.beta1, args.beta2))
+    elif args.optim == 'adabound':
+        return AdaBound(model_params, args.lr, betas=(args.beta1, args.beta2),
+                        final_lr=args.final_lr, gamma=args.gamma)
+
+    else:
+        assert args.optim == 'amsbound'
+        return AdaBound(model_params, args.lr, betas=(args.beta1, args.beta2),
+                        final_lr=args.final_lr, gamma=args.gamma,
+                         amsbound=True)
+
 
 
 # Truncated backpropagation
 def detach(states):
     return [state.detach() for state in states]
 
+
+ckpt_name = get_ckpt_name(model=args.model, optimizer=args.optim, lr=args.lr,
+                              final_lr=args.final_lr, momentum=args.momentum,
+                              beta1=args.beta1, beta2=args.beta2, gamma=args.gamma)
+if args.resume:
+    ckpt = load_checkpoint(ckpt_name)
+    best_acc = ckpt['acc']
+    start_epoch = ckpt['epoch']
+else:
+    ckpt = None
+    best_acc = 0
+    start_epoch = -1
 
 # Train the model
 for epoch in range(num_epochs):

@@ -79,8 +79,8 @@ def build_dataset():
     return train_loader, test_loader
 
 
-def get_ckpt_name(model='SLP_model', optimizer='amsgrad', lr=1e-2, final_lr=1e-4, momentum=0.9,
-                  beta1=0.99, beta2=0.999, gamma=0.5):
+def get_ckpt_name(model='SLP_model', optimizer='sgd', lr=100, final_lr=0.01, momentum=0.9,
+                  beta1=0.99, beta2=0.999, gamma=0.1):
     name = {
         'sgd': 'lr{}-momentum{}'.format(lr, momentum),
         'adagrad': 'lr{}'.format(lr),
@@ -144,7 +144,7 @@ def create_optimizer(args, model_params):
         assert args.optim == 'amsbound'
         return AdaBound(model_params, args.lr, betas=(args.beta1, args.beta2),
                         final_lr=args.final_lr, gamma=args.gamma,
-                        weight_decay=args.weight_decay, amsbound=True)
+                        amsbound=True)
 
 
 def train(net, epoch, device, data_loader, optimizer, criterion):
