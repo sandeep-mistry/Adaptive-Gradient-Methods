@@ -16,11 +16,11 @@ from adabound import AdaBound
 def get_parser():
     parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
     parser.add_argument('--model', default='resnet', type=str, help='model',
-                        choices=['resnet', 'densenet','Alexnet'])
+                        choices=['resnet', 'densenet'])
     parser.add_argument('--optim', default='sgd', type=str, help='optimizer',
                         choices=['sgd', 'adagrad', 'adam', 'amsgrad', 'adabound', 'amsbound'])
-    parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
-    parser.add_argument('--final_lr', default=0.1, type=float,
+    parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
+    parser.add_argument('--final_lr', default=0.01, type=float,
                         help='final learning rate of AdaBound')
     parser.add_argument('--gamma', default=1e-3, type=float,
                         help='convergence speed term of AdaBound')
@@ -56,20 +56,10 @@ def build_dataset():
                                            transform=transform_test)
     test_loader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=2)
 
-    # classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
-    # trainset = torchvision.datasets.SVHN(root='./data', train=True, download=True,
-    #                                         transform=transform_train)
-    # train_loader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True,
-    #                                            num_workers=2)
-    #
-    # testset = torchvision.datasets.SVHN(root='./data', train=False, download=True,
-    #                                        transform=transform_test)
-    # test_loader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=2)
-
     return train_loader, test_loader
 
 
-def get_ckpt_name(model='resnet', optimizer='sgd', lr=0.1, final_lr=0.1, momentum=0.9,
+def get_ckpt_name(model='resnet', optimizer='sgd', lr=0.001, final_lr=0.01, momentum=0.9,
                   beta1=0.9, beta2=0.999, gamma=1e-3):
     name = {
         'sgd': 'lr{}-momentum{}'.format(lr, momentum),
@@ -198,36 +188,36 @@ else:
 net = build_model(args, device, ckpt=ckpt)
 criterion = nn.CrossEntropyLoss()
 optimizer = create_optimizer(args, net.parameters())
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=150, gamma=0.1,
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=75, gamma=0.1,
                                           last_epoch=start_epoch)
 
 train_accuracies = []
 test_accuracies = []
 
-for epoch in range(start_epoch + 1, 200):
+for epoch in range(start_epoch + 1, 100):
     scheduler.step()
     train_acc = train(net, epoch, device, train_loader, optimizer, criterion)
     test_acc = test(net, device, test_loader, criterion)
 
 # Save checkpoint.
-if test_acc > best_acc:
-       print('Saving..')
-       state = {
-           'net': net.state_dict(),
-           'acc': test_acc,
-           'epoch': epoch,
-       }
-       if not os.path.isdir('checkpoint'):
-            os.mkdir('checkpoint')
-       torch.save(state, os.path.join('checkpoint', ckpt_name))
-       best_acc = test_acc
 
-       train_accuracies.append(train_acc)
-       test_accuracies.append(test_acc)
-       if not os.path.isdir('curve'):
-           os.mkdir('curve')
-       torch.save({'train_acc': train_accuracies, 'test_acc': test_accuracies},
-                   os.path.join('curve', ckpt_name))
+    print('Saving..')
+    state = {
+        'net': net.state_dict(),
+        'acc': test_acc,
+        'epoch': epoch,
+    }
+    if not os.path.isdir('checkpoint'):
+         os.mkdir('checkpoint')
+    torch.save(state, os.path.join('checkpoint', ckpt_name))
+    best_acc = test_acc
+
+    train_accuracies.append(train_acc)
+    test_accuracies.append(test_acc)
+    if not os.path.isdir('curve'):
+        os.mkdir('curve')
+    torch.save({'train_acc': train_accuracies, 'test_acc': test_accuracies},
+                os.path.join('curve', ckpt_name))
 
 
 

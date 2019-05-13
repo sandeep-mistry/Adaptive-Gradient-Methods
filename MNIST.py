@@ -16,18 +16,18 @@ from adabound import AdaBound
 
 def get_parser():
     parser = argparse.ArgumentParser(description='PyTorch MNIST Training')
-    parser.add_argument('--model', default='MLP_Dropout', type=str, help='model',
+    parser.add_argument('--model', default='Simple_MLP', type=str, help='model',
                         choices=['resnet', 'densenet', 'Simple_MLP','MLP_Dropout','SLP_model'])
-    parser.add_argument('--optim', default='adam', type=str, help='optimizer',
+    parser.add_argument('--optim', default='amsbound', type=str, help='optimizer',
                         choices=['sgd', 'adagrad', 'adam', 'amsgrad', 'adabound', 'amsbound'])
-    parser.add_argument('--lr', default=1e-2, type=float, help='learning rate')
-    parser.add_argument('--final_lr', default=1e-4, type=float,
+    parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
+    parser.add_argument('--final_lr', default=0.01, type=float,
                         help='final learning rate of AdaBound')
-    parser.add_argument('--gamma', default=0.5, type=float,
+    parser.add_argument('--gamma', default=0.1, type=float,
                         help='convergence speed term of AdaBound')
     parser.add_argument('--momentum', default=0.9, type=float, help='momentum term')
     parser.add_argument('--beta1', default=0.9, type=float, help='Adam coefficients beta_1')
-    parser.add_argument('--beta2', default=0.99, type=float, help='Adam coefficients beta_2')
+    parser.add_argument('--beta2', default=0.999, type=float, help='Adam coefficients beta_2')
     parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
     parser.add_argument('--weight_decay', default=5e-4, type=float,
                         help='weight decay for optimizers')
@@ -68,8 +68,8 @@ def build_dataset():
     return train_loader, test_loader
 
 
-def get_ckpt_name(model='MLP_Dropout', optimizer='adam', lr=1e-2, final_lr=1e-4, momentum=0.9,
-                  beta1=0.9, beta2=0.99, gamma=0.5):
+def get_ckpt_name(model='Simple_MLP', optimizer='amsbound', lr=0.001, final_lr=0.01, momentum=0.9,
+                  beta1=0.9, beta2=0.999, gamma=0.1):
     name = {
         'sgd': 'lr{}-momentum{}'.format(lr, momentum),
         'adagrad': 'lr{}'.format(lr),
@@ -189,7 +189,7 @@ parser = get_parser()
 args = parser.parse_args()
 
 train_loader, test_loader = build_dataset()
-device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+device = 'cuda:1' if torch.cuda.is_available() else 'cpu'
 
 ckpt_name = get_ckpt_name(model=args.model, optimizer=args.optim, lr=args.lr,
                               final_lr=args.final_lr, momentum=args.momentum,
@@ -206,7 +206,7 @@ else:
 net = build_model(args, device, ckpt=ckpt)
 criterion = nn.CrossEntropyLoss()
 optimizer = create_optimizer(args, net.parameters())
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=18, gamma=0.5,
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=75, gamma=0.1,
                                           last_epoch=start_epoch)
 
 train_accuracies = []
