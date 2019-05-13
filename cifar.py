@@ -103,7 +103,7 @@ def create_optimizer(args, model_params):
         return optim.SGD(model_params, args.lr, momentum=args.momentum,
                          weight_decay=args.weight_decay)
     elif args.optim == 'adagrad':
-        return optim.Adagrad(model_params, lr=0.01, epsilon=None, decay=0.0)
+        return optim.Adagrad(model_params, lr=0.01,  weight_decay=0.0)
     elif args.optim == 'adam':
         return optim.Adam(model_params, args.lr, betas=(args.beta1, args.beta2),
                           weight_decay=args.weight_decay)
