@@ -20,7 +20,7 @@ def get_parser():
     parser.add_argument('--optim', default='sgd', type=str, help='optimizer',
                         choices=['sgd', 'adagrad', 'adam', 'amsgrad', 'adabound', 'amsbound'])
     parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
-    parser.add_argument('--final_lr', default=0.01, type=float,
+    parser.add_argument('--final_lr', default=0.0001, type=float,
                         help='final learning rate of AdaBound')
     parser.add_argument('--gamma', default=1e-3, type=float,
                         help='convergence speed term of AdaBound')
@@ -59,8 +59,8 @@ def build_dataset():
     return train_loader, test_loader
 
 
-def get_ckpt_name(model='resnet', optimizer='sgd', lr=0.001, final_lr=0.01, momentum=0.9,
-                  beta1=0.9, beta2=0.999, gamma=1e-3):
+def get_ckpt_name(model='resnet', optimizer='sgd', lr=0.001, final_lr=0.0001, momentum=0.9,
+                  beta1=0.9, beta2=0.999, gamma=0.1):
     name = {
         'sgd': 'lr{}-momentum{}'.format(lr, momentum),
         'adagrad': 'lr{}'.format(lr),
@@ -188,13 +188,13 @@ else:
 net = build_model(args, device, ckpt=ckpt)
 criterion = nn.CrossEntropyLoss()
 optimizer = create_optimizer(args, net.parameters())
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=75, gamma=0.1,
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=37, gamma=0.1,
                                           last_epoch=start_epoch)
 
 train_accuracies = []
 test_accuracies = []
 
-for epoch in range(start_epoch + 1, 100):
+for epoch in range(start_epoch + 1, 50):
     scheduler.step()
     train_acc = train(net, epoch, device, train_loader, optimizer, criterion)
     test_acc = test(net, device, test_loader, criterion)
