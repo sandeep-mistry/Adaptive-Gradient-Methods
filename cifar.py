@@ -59,7 +59,7 @@ def build_dataset():
     return train_loader, test_loader
 
 
-def get_ckpt_name(model='resnet', optimizer='adagrad', lr=0.1, final_lr=0.01, momentum=0.9,
+def get_ckpt_name(model='resnet', optimizer='adagrad', lr=0.01, final_lr=0.001, momentum=0.9,
                   beta1=0.9, beta2=0.999, gamma=0.1):
     name = {
         'sgd': 'lr{}-momentum{}'.format(lr, momentum),
@@ -103,7 +103,7 @@ def create_optimizer(args, model_params):
         return optim.SGD(model_params, args.lr, momentum=args.momentum,
                          weight_decay=args.weight_decay)
     elif args.optim == 'adagrad':
-        return optim.Adagrad(model_params, args.lr, weight_decay=args.weight_decay)
+        return optim.Adagrad(model_params, lr=0.01, epsilon=None, decay=0.0)
     elif args.optim == 'adam':
         return optim.Adam(model_params, args.lr, betas=(args.beta1, args.beta2),
                           weight_decay=args.weight_decay)
