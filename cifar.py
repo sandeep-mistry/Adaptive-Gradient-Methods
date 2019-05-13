@@ -17,7 +17,7 @@ def get_parser():
     parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
     parser.add_argument('--model', default='resnet', type=str, help='model',
                         choices=['resnet', 'densenet'])
-    parser.add_argument('--optim', default='adabound', type=str, help='optimizer',
+    parser.add_argument('--optim', default='amsbound', type=str, help='optimizer',
                         choices=['sgd', 'adagrad', 'adam', 'amsgrad', 'adabound', 'amsbound'])
     parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
     parser.add_argument('--final_lr', default=0.01, type=float,
@@ -59,7 +59,7 @@ def build_dataset():
     return train_loader, test_loader
 
 
-def get_ckpt_name(model='resnet', optimizer='adabound', lr=0.1, final_lr=0.01, momentum=0.9,
+def get_ckpt_name(model='resnet', optimizer='amsbound', lr=0.1, final_lr=0.01, momentum=0.9,
                   beta1=0.9, beta2=0.999, gamma=0.1):
     name = {
         'sgd': 'lr{}-momentum{}'.format(lr, momentum),
