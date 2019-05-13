@@ -220,7 +220,7 @@ scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=18, gamma=0.1,
 train_accuracies = []
 test_accuracies = []
 
-for epoch in range(start_epoch + 1, 100):
+for epoch in range(start_epoch + 1, 2):
     scheduler.step()
     train_acc = train(net, epoch, device, train_loader, optimizer, criterion)
     test_acc = test(net, device, test_loader, criterion)
@@ -232,10 +232,6 @@ for epoch in range(start_epoch + 1, 100):
         'acc': test_acc,
         'epoch': epoch,
     }
-    if not os.path.isdir('checkpoint'):
-         os.mkdir('checkpoint')
-    torch.save(state, os.path.join('checkpoint', ckpt_name))
-    best_acc = test_acc
 
     train_accuracies.append(train_acc)
     test_accuracies.append(test_acc)
