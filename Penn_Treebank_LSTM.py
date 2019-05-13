@@ -1,5 +1,6 @@
 # Some part of the code was referenced from below.
 # https://github.com/pytorch/examples/tree/master/word_language_model
+from __future__ import print_function
 import torch
 import torch.nn as nn
 import numpy as np
@@ -11,7 +12,6 @@ from models.Three_Layer_LSTM import RNNLM_3
 from adabound import AdaBound
 import os
 import argparse
-from __future__ import print_function
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
 
@@ -20,7 +20,7 @@ def get_parser():
     parser = argparse.ArgumentParser(description='PyTorch Penn Treebank Training')
     parser.add_argument('--model', default='One_Layer_LSTM', type=str, help='model',
                         choices=['One_Layer_LSTM','Two_Layer_LSTM','Three_Layer_LSTM'])
-    parser.add_argument('--optim', default='adabound', type=str, help='optimizer',
+    parser.add_argument('--optim', default='adam', type=str, help='optimizer',
                         choices=['sgd','adam','adabound', 'amsbound'])
     parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
     parser.add_argument('--final_lr', default=0.001, type=float,
@@ -29,7 +29,7 @@ def get_parser():
                         help='convergence speed term of AdaBound')
     parser.add_argument('--momentum', default=0.9, type=float, help='momentum term')
     parser.add_argument('--beta1', default=0.9, type=float, help='Adam coefficients beta_1')
-    parser.add_argument('--beta2', default=0.999, type=float, help='Adam coefficients beta_2')
+    parser.add_argument('--beta2', default=0.99, type=float, help='Adam coefficients beta_2')
     parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
     parser.add_argument('--weight_decay', default=5e-4, type=float,
                         help='weight decay for optimizers')
@@ -59,8 +59,8 @@ ids = corpus.get_data('data/train.txt', batch_size)
 vocab_size = len(corpus.dictionary)
 num_batches = ids.size(1) // seq_length
 
-def get_ckpt_name(model='One_Layer_LSTM', optimizer='adabound', lr=0.001, final_lr=0.001, momentum=0.9,
-                  beta1=0.9, beta2=0.999, gamma=0.1):
+def get_ckpt_name(model='One_Layer_LSTM', optimizer='adam', lr=0.001, final_lr=0.001, momentum=0.9,
+                  beta1=0.9, beta2=0.99, gamma=0.1):
     name = {
         'sgd': 'lr{}-momentum{}'.format(lr, momentum),
         'adagrad': 'lr{}'.format(lr),
@@ -106,7 +106,7 @@ def create_optimizer(args, model_params):
     if args.optim == 'sgd':
         return optim.SGD(model_params, args.lr, momentum=args.momentum)
     elif args.optim == 'adam':
-        return optim.Adam(model_params, args.lr, betas=(args.beta1, args.beta2))
+        return optim.Adam(model_params, args.lr, betas=(args.beta1, args.beta2), weight_decay=args.weight_decay)
     elif args.optim == 'adabound':
         return AdaBound(model_params, args.lr, betas=(args.beta1, args.beta2),
                         final_lr=args.final_lr, gamma=args.gamma)
@@ -123,6 +123,8 @@ def create_optimizer(args, model_params):
 def detach(states):
     return [state.detach() for state in states]
 
+parser = get_parser()
+args = parser.parse_args()
 
 ckpt_name = get_ckpt_name(model=args.model, optimizer=args.optim, lr=args.lr,
                               final_lr=args.final_lr, momentum=args.momentum,
@@ -136,8 +138,17 @@ else:
     best_acc = 0
     start_epoch = -1
 
+net = build_model(args, device, ckpt=ckpt)
+criterion = nn.CrossEntropyLoss()
+optimizer = create_optimizer(args, net.parameters())
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.1,
+                                          last_epoch=start_epoch)
+
+train_perplexities = []
+
 # Train the model
-for epoch in range(num_epochs):
+for epoch in range(start_epoch + 1, num_epochs):
+    scheduler.step()
     # Set initial hidden and cell states
     states = (torch.zeros(num_layers, batch_size, hidden_size).to(device),
               torch.zeros(num_layers, batch_size, hidden_size).to(device))
@@ -149,49 +160,67 @@ for epoch in range(num_epochs):
 
         # Forward pass
         states = detach(states)
-        outputs, states = model(inputs, states)
+        outputs, states = net(inputs, states)
         loss = criterion(outputs, targets.reshape(-1))
 
         # Backward and optimize
-        model.zero_grad()
+        net.zero_grad()
         loss.backward()
-        clip_grad_norm_(model.parameters(), 0.5)
+        clip_grad_norm_(net.parameters(), 0.5)
         optimizer.step()
+        perplexity = np.exp(loss.item())
 
         step = (i + 1) // seq_length
         if step % 100 == 0:
             print('Epoch [{}/{}], Step[{}/{}], Loss: {:.4f}, Perplexity: {:5.2f}'
-                  .format(epoch + 1, num_epochs, step, num_batches, loss.item(), np.exp(loss.item())))
+                  .format(epoch + 1, num_epochs, step, num_batches, loss.item(), perplexity))
+# Save checkpoint.
+    print('Saving..')
+    state = {
+        'net': net.state_dict(),
+        'acc': perplexity,
+        'epoch': epoch,
+    }
+    if not os.path.isdir('checkpoint'):
+         os.mkdir('checkpoint')
+    torch.save(state, os.path.join('checkpoint', ckpt_name))
+    best_acc = perplexity
 
+    train_perplexities.append(perplexity)
+    # test_accuracies.append(test_acc)
+    if not os.path.isdir('curve'):
+        os.mkdir('curve')
+    torch.save({'train_acc': train_perplexities},
+                os.path.join('curve', ckpt_name))
 # Test the model
-with torch.no_grad():
-    with open('sample.txt', 'w') as f:
-        # Set intial hidden ane cell states
-        state = (torch.zeros(num_layers, 1, hidden_size).to(device),
-                 torch.zeros(num_layers, 1, hidden_size).to(device))
-
-        # Select one word id randomly
-        prob = torch.ones(vocab_size)
-        input = torch.multinomial(prob, num_samples=1).unsqueeze(1).to(device)
-
-        for i in range(num_samples):
-            # Forward propagate RNN
-            output, state = model(input, state)
-
-            # Sample a word id
-            prob = output.exp()
-            word_id = torch.multinomial(prob, num_samples=1).item()
-
-            # Fill input with sampled word id for the next time step
-            input.fill_(word_id)
-
-            # File write
-            word = corpus.dictionary.idx2word[word_id]
-            word = '\n' if word == '<eos>' else word + ' '
-            f.write(word)
-
-            if (i + 1) % 100 == 0:
-                print('Sampled [{}/{}] words and save to {}'.format(i + 1, num_samples, 'sample.txt'))
-
-# Save the model checkpoints
-torch.save(model.state_dict(), 'model.ckpt')
+# with torch.no_grad():
+#     with open('sample.txt', 'w') as f:
+#         # Set intial hidden ane cell states
+#         state = (torch.zeros(num_layers, 1, hidden_size).to(device),
+#                  torch.zeros(num_layers, 1, hidden_size).to(device))
+#
+#         # Select one word id randomly
+#         prob = torch.ones(vocab_size)
+#         input = torch.multinomial(prob, num_samples=1).unsqueeze(1).to(device)
+#
+#         for i in range(num_samples):
+#             # Forward propagate RNN
+#             output, state = model(input, state)
+#
+#             # Sample a word id
+#             prob = output.exp()
+#             word_id = torch.multinomial(prob, num_samples=1).item()
+#
+#             # Fill input with sampled word id for the next time step
+#             input.fill_(word_id)
+#
+#             # File write
+#             word = corpus.dictionary.idx2word[word_id]
+#             word = '\n' if word == '<eos>' else word + ' '
+#             f.write(word)
+#
+#             if (i + 1) % 100 == 0:
+#                 print('Sampled [{}/{}] words and save to {}'.format(i + 1, num_samples, 'sample.txt'))
+#
+# # Save the model checkpoints
+# torch.save(model.state_dict(), 'model.ckpt')
