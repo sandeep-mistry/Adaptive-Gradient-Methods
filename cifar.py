@@ -201,23 +201,23 @@ for epoch in range(start_epoch + 1, 100):
 
 # Save checkpoint.
 
-   print('Saving..')
-   state = {
-       'net': net.state_dict(),
-       'acc': test_acc,
-       'epoch': epoch,
-   }
-   if not os.path.isdir('checkpoint'):
-        os.mkdir('checkpoint')
-   torch.save(state, os.path.join('checkpoint', ckpt_name))
-   best_acc = test_acc
+    print('Saving..')
+    state = {
+        'net': net.state_dict(),
+        'acc': test_acc,
+        'epoch': epoch,
+    }
+    if not os.path.isdir('checkpoint'):
+         os.mkdir('checkpoint')
+    torch.save(state, os.path.join('checkpoint', ckpt_name))
+    best_acc = test_acc
 
-   train_accuracies.append(train_acc)
-   test_accuracies.append(test_acc)
-   if not os.path.isdir('curve'):
-       os.mkdir('curve')
-   torch.save({'train_acc': train_accuracies, 'test_acc': test_accuracies},
-               os.path.join('curve', ckpt_name))
+    train_accuracies.append(train_acc)
+    test_accuracies.append(test_acc)
+    if not os.path.isdir('curve'):
+        os.mkdir('curve')
+    torch.save({'train_acc': train_accuracies, 'test_acc': test_accuracies},
+                os.path.join('curve', ckpt_name))
 
 
 
