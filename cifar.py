@@ -20,7 +20,7 @@ def get_parser():
     parser.add_argument('--optim', default='amsbound', type=str, help='optimizer',
                         choices=['sgd', 'adagrad', 'adam', 'amsgrad', 'adabound', 'amsbound'])
     parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
-    parser.add_argument('--final_lr', default=0.001, type=float,
+    parser.add_argument('--final_lr', default=0.1, type=float,
                         help='final learning rate of AdaBound')
     parser.add_argument('--gamma', default=1e-3, type=float,
                         help='convergence speed term of AdaBound')
