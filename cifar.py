@@ -59,7 +59,7 @@ def build_dataset():
     return train_loader, test_loader
 
 
-def get_ckpt_name(model='resnet', optimizer='amsbound', lr=0.001, final_lr=0.001, momentum=0.9,
+def get_ckpt_name(model='resnet', optimizer='amsbound', lr=0.1, final_lr=0.1, momentum=0.9,
                   beta1=0.9, beta2=0.999, gamma=1e-3):
     name = {
         'sgd': 'lr{}-momentum{}'.format(lr, momentum),
