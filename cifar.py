@@ -207,10 +207,6 @@ for epoch in range(start_epoch + 1, 50):
         'acc': test_acc,
         'epoch': epoch,
     }
-    if not os.path.isdir('checkpoint'):
-         os.mkdir('checkpoint')
-    torch.save(state, os.path.join('checkpoint', ckpt_name))
-    best_acc = test_acc
 
     train_accuracies.append(train_acc)
     test_accuracies.append(test_acc)
