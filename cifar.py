@@ -12,14 +12,13 @@ import argparse
 from models import *
 from adabound import AdaBound
 
-
+learning_rate = 0.1
 def get_parser():
     parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
     parser.add_argument('--model', default='densenet', type=str, help='model',
                         choices=['resnet', 'densenet'])
     parser.add_argument('--optim', default='amsgrad', type=str, help='optimizer',
                         choices=['sgd', 'adagrad', 'adam', 'amsgrad', 'adabound', 'amsbound'])
-    parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
     parser.add_argument('--final_lr', default=0.0001, type=float,
                         help='final learning rate of AdaBound')
     parser.add_argument('--gamma', default=0.1, type=float,
@@ -59,7 +58,7 @@ def build_dataset():
     return train_loader, test_loader
 
 
-def get_ckpt_name(model='densenet', optimizer='amsgrad', lr=0.001, final_lr=0.0001, momentum=0.9,
+def get_ckpt_name(model='densenet', optimizer='amsgrad', lr=learning_rate, final_lr=0.0001, momentum=0.9,
                   beta1=0.99, beta2=0.999, gamma=0.1):
     name = {
         'sgd': 'lr{}-momentum{}'.format(lr, momentum),
@@ -100,23 +99,23 @@ def build_model(args, device, ckpt=None):
 
 def create_optimizer(args, model_params):
     if args.optim == 'sgd':
-        return optim.SGD(model_params, args.lr, momentum=args.momentum,
+        return optim.SGD(model_params, learning_rate, momentum=args.momentum,
                          weight_decay=args.weight_decay)
     elif args.optim == 'adagrad':
-        return optim.Adagrad(model_params, lr=0.01,  weight_decay=0.0)
+        return optim.Adagrad(model_params, learning_rate,  weight_decay=0.0)
     elif args.optim == 'adam':
-        return optim.Adam(model_params, args.lr, betas=(args.beta1, args.beta2),
+        return optim.Adam(model_params, learning_rate, betas=(args.beta1, args.beta2),
                           weight_decay=args.weight_decay)
     elif args.optim == 'amsgrad':
-        return optim.Adam(model_params, args.lr, betas=(args.beta1, args.beta2),
+        return optim.Adam(model_params, learning_rate, betas=(args.beta1, args.beta2),
                           weight_decay=args.weight_decay, amsgrad=True)
     elif args.optim == 'adabound':
-        return AdaBound(model_params, args.lr, betas=(args.beta1, args.beta2),
+        return AdaBound(model_params, learning_rate, betas=(args.beta1, args.beta2),
                         final_lr=args.final_lr, gamma=args.gamma,
                         weight_decay=args.weight_decay)
     else:
         assert args.optim == 'amsbound'
-        return AdaBound(model_params, args.lr, betas=(args.beta1, args.beta2),
+        return AdaBound(model_params, learning_rate, betas=(args.beta1, args.beta2),
                         final_lr=args.final_lr, gamma=args.gamma,
                         weight_decay=args.weight_decay, amsbound=True)
 
@@ -171,9 +170,9 @@ parser = get_parser()
 args = parser.parse_args()
 
 train_loader, test_loader = build_dataset()
-device = 'cuda:2' if torch.cuda.is_available() else 'cpu'
+device = 'cuda:1' if torch.cuda.is_available() else 'cpu'
 
-ckpt_name = get_ckpt_name(model=args.model, optimizer=args.optim, lr=args.lr,
+ckpt_name = get_ckpt_name(model=args.model, optimizer=args.optim, lr=learning_rate,
                               final_lr=args.final_lr, momentum=args.momentum,
                               beta1=args.beta1, beta2=args.beta2, gamma=args.gamma)
 if args.resume:
