@@ -157,14 +157,10 @@ device = 'cuda:1' if torch.cuda.is_available() else 'cpu'
 ckpt_name = get_ckpt_name(model=model_choice, optimizer=optim_choice, lr=learning_rate,
                               final_lr=final_learning_rate, momentum=momentum_choice,
                               beta1=beta_1, beta2=beta_2, gamma=gamma_choice)
-if resumed:
-    ckpt = load_checkpoint(ckpt_name)
-    best_acc = ckpt['acc']
-    start_epoch = ckpt['epoch']
-else:
-    ckpt = None
-    best_acc = 0
-    start_epoch = -1
+
+ckpt = None
+best_acc = 0
+start_epoch = -1
 
 net = build_model(device, ckpt=ckpt)
 criterion = nn.CrossEntropyLoss()
