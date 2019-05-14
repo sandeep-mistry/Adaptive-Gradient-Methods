@@ -23,8 +23,7 @@ beta_2 = 0.999
 resumed = '-r'
 weights = 5e-4
 gamma_choice = 0.1
-epochs = 50
-step = 50
+epochs = 100
 
 
 def build_dataset(): 
@@ -165,14 +164,11 @@ start_epoch = -1
 net = build_model(device, ckpt=ckpt)
 criterion = nn.CrossEntropyLoss()
 optimizer = create_optimizer(net.parameters())
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=step, gamma=gamma_choice,
-                                          last_epoch=start_epoch)
 
 train_accuracies = []
 test_accuracies = []
 
 for epoch in range(start_epoch + 1, epochs):
-    scheduler.step()
     train_acc = train(net, epoch, device, train_loader, optimizer, criterion)
     test_acc = test(net, device, test_loader, criterion)
 
