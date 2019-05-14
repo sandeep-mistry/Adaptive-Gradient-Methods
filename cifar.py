@@ -7,7 +7,6 @@ import torchvision
 import torchvision.transforms as transforms
 
 import os
-import argparse
 
 from models import *
 from adabound import AdaBound
@@ -16,18 +15,14 @@ learning_rate = 0.1
 final_learning_rate = 0.01
 model_choice = 'densenet'  # 'resnet', 'densenet'
 optim_choice = 'amsgrad'  # 'sgd', 'adagrad', 'adam', 'amsgrad', 'adabound', 'amsbound'
-def get_parser():
-    parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
-    parser.add_argument('--gamma', default=0.1, type=float,
-                        help='convergence speed term of AdaBound')
-    parser.add_argument('--momentum', default=0.9, type=float, help='momentum term')
-    parser.add_argument('--beta1', default=0.99, type=float, help='Adam coefficients beta_1')
-    parser.add_argument('--beta2', default=0.999, type=float, help='Adam coefficients beta_2')
-    parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
-    parser.add_argument('--weight_decay', default=5e-4, type=float,
-                        help='weight decay for optimizers')
-    return parser
-
+momentum_choice = 0.9
+beta_1 = 0.99
+beta_2 = 0.999
+resumed = '-r'
+weights = 5e-4
+gamma_choice = 0.1
+epochs = 50
+step = 37
 
 def build_dataset():
     print('==> Preparing data..')
@@ -55,8 +50,8 @@ def build_dataset():
     return train_loader, test_loader
 
 
-def get_ckpt_name(model=model_choice, optimizer=optim_choice, lr=learning_rate, final_lr=final_learning_rate, momentum=0.9,
-                  beta1=0.99, beta2=0.999, gamma=0.1):
+def get_ckpt_name(model=model_choice, optimizer=optim_choice, lr=learning_rate, final_lr=final_learning_rate, momentum=momentum_choice,
+                  beta1=beta_1, beta2=beta_2, gamma=gamma_choice):
     name = {
         'sgd': 'lr{}-momentum{}'.format(lr, momentum),
         'adagrad': 'lr{}'.format(lr),
@@ -76,7 +71,7 @@ def load_checkpoint(ckpt_name):
     return torch.load(ckpt_name)
 
 
-def build_model(args, device, ckpt=None):
+def build_model(device, ckpt=None):
     print('==> Building model..')
     net = {
         'resnet': ResNet34,
@@ -94,27 +89,27 @@ def build_model(args, device, ckpt=None):
     return net
 
 
-def create_optimizer(args, model_params):
+def create_optimizer(model_params):
     if optim_choice == 'sgd':
-        return optim.SGD(model_params, learning_rate, momentum=args.momentum,
-                         weight_decay=args.weight_decay)
+        return optim.SGD(model_params, learning_rate, momentum=momentum_choice,
+                         weight_decay=weights)
     elif optim_choice == 'adagrad':
         return optim.Adagrad(model_params, learning_rate,  weight_decay=0.0)
     elif optim_choice == 'adam':
-        return optim.Adam(model_params, learning_rate, betas=(args.beta1, args.beta2),
-                          weight_decay=args.weight_decay)
+        return optim.Adam(model_params, learning_rate, betas=(beta_1, beta_2),
+                          weight_decay=weights)
     elif optim_choice == 'amsgrad':
-        return optim.Adam(model_params, learning_rate, betas=(args.beta1, args.beta2),
-                          weight_decay=args.weight_decay, amsgrad=True)
+        return optim.Adam(model_params, learning_rate, betas=(beta_1, beta_2),
+                          weight_decay=weights, amsgrad=True)
     elif optim_choice == 'adabound':
-        return AdaBound(model_params, learning_rate, betas=(args.beta1, args.beta2),
-                        final_lr=final_learning_rate, gamma=args.gamma,
-                        weight_decay=args.weight_decay)
+        return AdaBound(model_params, learning_rate, betas=(beta_1, beta_2),
+                        final_lr=final_learning_rate, gamma=gamma_choice,
+                        weight_decay=weights)
     else:
         assert optim_choice == 'amsbound'
-        return AdaBound(model_params, learning_rate, betas=(args.beta1, args.beta2),
-                        final_lr=final_learning_rate, gamma=args.gamma,
-                        weight_decay=args.weight_decay, amsbound=True)
+        return AdaBound(model_params, learning_rate, betas=(beta_1, beta_2),
+                        final_lr=final_learning_rate, gamma=gamma_choice,
+                        weight_decay=weights, amsbound=True)
 
 
 def train(net, epoch, device, data_loader, optimizer, criterion):
@@ -163,16 +158,15 @@ def test(net, device, data_loader, criterion):
 
     return accuracy
 
-parser = get_parser()
-args = parser.parse_args()
+
 
 train_loader, test_loader = build_dataset()
 device = 'cuda:1' if torch.cuda.is_available() else 'cpu'
 
 ckpt_name = get_ckpt_name(model=model_choice, optimizer=optim_choice, lr=learning_rate,
-                              final_lr=final_learning_rate, momentum=args.momentum,
-                              beta1=args.beta1, beta2=args.beta2, gamma=args.gamma)
-if args.resume:
+                              final_lr=final_learning_rate, momentum=momentum_choice,
+                              beta1=beta_1, beta2=beta_2, gamma=gamma_choice)
+if resumed:
     ckpt = load_checkpoint(ckpt_name)
     best_acc = ckpt['acc']
     start_epoch = ckpt['epoch']
@@ -181,16 +175,16 @@ else:
     best_acc = 0
     start_epoch = -1
 
-net = build_model(args, device, ckpt=ckpt)
+net = build_model(device, ckpt=ckpt)
 criterion = nn.CrossEntropyLoss()
-optimizer = create_optimizer(args, net.parameters())
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=37, gamma=0.1,
+optimizer = create_optimizer(net.parameters())
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=step, gamma=gamma_choice,
                                           last_epoch=start_epoch)
 
 train_accuracies = []
 test_accuracies = []
 
-for epoch in range(start_epoch + 1, 50):
+for epoch in range(start_epoch + 1, epochs):
     scheduler.step()
     train_acc = train(net, epoch, device, train_loader, optimizer, criterion)
     test_acc = test(net, device, test_loader, criterion)
