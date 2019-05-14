@@ -87,8 +87,7 @@ def create_optimizer(model_params):
     elif optim_choice == 'adagrad':
         return optim.Adagrad(model_params, learning_rate,  weight_decay=0.0)
     elif optim_choice == 'adam':
-        return optim.Adam(model_params, learning_rate, betas=(beta_1, beta_2),
-                          weight_decay=weights)
+        return optim.Adam(model_params, learning_rate, betas=(beta_1, beta_2))
     elif optim_choice == 'amsgrad':
         return optim.Adam(model_params, learning_rate, betas=(beta_1, beta_2),
                           weight_decay=weights, amsgrad=True)
