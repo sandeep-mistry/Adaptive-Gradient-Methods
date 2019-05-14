@@ -23,7 +23,7 @@ resumed = '-r'
 weights = 5e-4
 gamma_choice = 0.1
 epochs = 50
-step = 50
+step = 37
 
 
 def build_dataset(): 
@@ -153,7 +153,7 @@ def test(net, device, data_loader, criterion):
 
 
 train_loader, test_loader = build_dataset()
-device = 'cuda:1' if torch.cuda.is_available() else 'cpu'
+device = 'cuda:2' if torch.cuda.is_available() else 'cpu'
 
 ckpt_name = get_ckpt_name(model=model_choice, optimizer=optim_choice, lr=learning_rate,
                               final_lr=final_learning_rate, momentum=momentum_choice,
