@@ -12,8 +12,8 @@ from models import *
 from adabound import AdaBound
 
 
-learning_rate = 0.001
-final_learning_rate = 0.0001
+learning_rate = 0.1
+final_learning_rate = 0.1
 model_choice = 'SLP_model'  # 'resnet', 'densenet', 'SLP_Model'
 optim_choice = 'sgd'  # 'sgd', 'adagrad', 'adam', 'amsgrad', 'adabound', 'amsbound'
 momentum_choice = 0.9
@@ -23,7 +23,7 @@ resumed = '-r'
 weights = 5e-4
 gamma_choice = 0.1
 epochs = 50
-step = 37
+step = 50
 
 
 def build_dataset(): 
