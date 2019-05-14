@@ -47,11 +47,15 @@ else:
 embed_size = 128
 hidden_size = 1024
 num_layers = 1
-num_epochs = 5
+num_epochs = 50
 num_samples = 1000  # number of words to be sampled
 batch_size = 20
 seq_length = 30
-learning_rate = 0.002
+learning_rate = 0.001
+final_learning_rate = 0.0001
+step_size = 37
+beta_1 = 0.9
+beta_2 = 0.99
 
 # Load "Penn Treebank" dataset
 corpus = Corpus()
@@ -59,8 +63,8 @@ ids = corpus.get_data('data/train.txt', batch_size)
 vocab_size = len(corpus.dictionary)
 num_batches = ids.size(1) // seq_length
 
-def get_ckpt_name(model='One_Layer_LSTM', optimizer='adam', lr=0.001, final_lr=0.001, momentum=0.9,
-                  beta1=0.9, beta2=0.99, gamma=0.1):
+def get_ckpt_name(model='One_Layer_LSTM', optimizer='adam', lr=learning_rate, final_lr=final_learning_rate, momentum=0.9,
+                  beta1=beta_1, beta2=beta_2, gamma=0.1):
     name = {
         'sgd': 'lr{}-momentum{}'.format(lr, momentum),
         'adagrad': 'lr{}'.format(lr),
@@ -106,7 +110,7 @@ def create_optimizer(args, model_params):
     if args.optim == 'sgd':
         return optim.SGD(model_params, args.lr, momentum=args.momentum)
     elif args.optim == 'adam':
-        return optim.Adam(model_params, args.lr, betas=(args.beta1, args.beta2), weight_decay=args.weight_decay)
+        return optim.Adam(model_params, lr=args.lr, betas=(args.beta1, args.beta2), weight_decay=args.weight_decay)
     elif args.optim == 'adabound':
         return AdaBound(model_params, args.lr, betas=(args.beta1, args.beta2),
                         final_lr=args.final_lr, gamma=args.gamma)
@@ -141,14 +145,14 @@ else:
 net = build_model(args, device, ckpt=ckpt)
 criterion = nn.CrossEntropyLoss()
 optimizer = create_optimizer(args, net.parameters())
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.1,
-                                          last_epoch=start_epoch)
+# scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=0.1,
+#                                           last_epoch=start_epoch)
 
 train_perplexities = []
 
 # Train the model
 for epoch in range(start_epoch + 1, num_epochs):
-    scheduler.step()
+    # scheduler.step()
     # Set initial hidden and cell states
     states = (torch.zeros(num_layers, batch_size, hidden_size).to(device),
               torch.zeros(num_layers, batch_size, hidden_size).to(device))
@@ -168,13 +172,15 @@ for epoch in range(start_epoch + 1, num_epochs):
         loss.backward()
         clip_grad_norm_(net.parameters(), 0.5)
         optimizer.step()
-        perplexity = np.exp(loss.item())
+        # perplexity = np.exp(loss.item())
 
         step = (i + 1) // seq_length
         if step % 100 == 0:
+            # perplexity = np.exp(loss.item())
             print('Epoch [{}/{}], Step[{}/{}], Loss: {:.4f}, Perplexity: {:5.2f}'
-                  .format(epoch + 1, num_epochs, step, num_batches, loss.item(), perplexity))
+                  .format(epoch + 1, num_epochs, step, num_batches, loss.item(), np.exp(loss.item())))
 # Save checkpoint.
+    perplexity = np.exp(loss.item())
     print('Saving..')
     state = {
         'net': net.state_dict(),
@@ -193,34 +199,34 @@ for epoch in range(start_epoch + 1, num_epochs):
     torch.save({'train_acc': train_perplexities},
                 os.path.join('curve', ckpt_name))
 # Test the model
-# with torch.no_grad():
-#     with open('sample.txt', 'w') as f:
-#         # Set intial hidden ane cell states
-#         state = (torch.zeros(num_layers, 1, hidden_size).to(device),
-#                  torch.zeros(num_layers, 1, hidden_size).to(device))
-#
-#         # Select one word id randomly
-#         prob = torch.ones(vocab_size)
-#         input = torch.multinomial(prob, num_samples=1).unsqueeze(1).to(device)
-#
-#         for i in range(num_samples):
-#             # Forward propagate RNN
-#             output, state = model(input, state)
-#
-#             # Sample a word id
-#             prob = output.exp()
-#             word_id = torch.multinomial(prob, num_samples=1).item()
-#
-#             # Fill input with sampled word id for the next time step
-#             input.fill_(word_id)
-#
-#             # File write
-#             word = corpus.dictionary.idx2word[word_id]
-#             word = '\n' if word == '<eos>' else word + ' '
-#             f.write(word)
-#
-#             if (i + 1) % 100 == 0:
-#                 print('Sampled [{}/{}] words and save to {}'.format(i + 1, num_samples, 'sample.txt'))
-#
-# # Save the model checkpoints
-# torch.save(model.state_dict(), 'model.ckpt')
+with torch.no_grad():
+    with open('sample.txt', 'w') as f:
+        # Set intial hidden ane cell states
+        state = (torch.zeros(num_layers, 1, hidden_size).to(device),
+                 torch.zeros(num_layers, 1, hidden_size).to(device))
+
+        # Select one word id randomly
+        prob = torch.ones(vocab_size)
+        input = torch.multinomial(prob, num_samples=1).unsqueeze(1).to(device)
+
+        for i in range(num_samples):
+            # Forward propagate RNN
+            output, state = net(input, state)
+
+            # Sample a word id
+            prob = output.exp()
+            word_id = torch.multinomial(prob, num_samples=1).item()
+
+            # Fill input with sampled word id for the next time step
+            input.fill_(word_id)
+
+            # File write
+            word = corpus.dictionary.idx2word[word_id]
+            word = '\n' if word == '<eos>' else word + ' '
+            f.write(word)
+
+            if (i + 1) % 100 == 0:
+                print('Sampled [{}/{}] words and save to {}'.format(i + 1, num_samples, 'sample.txt'))
+
+# Save the model checkpoints
+torch.save(net.state_dict(), 'model.ckpt')
