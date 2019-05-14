@@ -17,16 +17,16 @@ def get_parser():
     parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
     parser.add_argument('--model', default='densenet', type=str, help='model',
                         choices=['resnet', 'densenet'])
-    parser.add_argument('--optim', default='adabound', type=str, help='optimizer',
+    parser.add_argument('--optim', default='adam', type=str, help='optimizer',
                         choices=['sgd', 'adagrad', 'adam', 'amsgrad', 'adabound', 'amsbound'])
-    parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
-    parser.add_argument('--final_lr', default=0.01, type=float,
+    parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
+    parser.add_argument('--final_lr', default=0.0001, type=float,
                         help='final learning rate of AdaBound')
     parser.add_argument('--gamma', default=0.1, type=float,
                         help='convergence speed term of AdaBound')
     parser.add_argument('--momentum', default=0.9, type=float, help='momentum term')
     parser.add_argument('--beta1', default=0.9, type=float, help='Adam coefficients beta_1')
-    parser.add_argument('--beta2', default=0.999, type=float, help='Adam coefficients beta_2')
+    parser.add_argument('--beta2', default=0.99, type=float, help='Adam coefficients beta_2')
     parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
     parser.add_argument('--weight_decay', default=5e-4, type=float,
                         help='weight decay for optimizers')
@@ -59,8 +59,8 @@ def build_dataset():
     return train_loader, test_loader
 
 
-def get_ckpt_name(model='densenet', optimizer='adabound', lr=0.1, final_lr=0.01, momentum=0.9,
-                  beta1=0.9, beta2=0.999, gamma=0.1):
+def get_ckpt_name(model='densenet', optimizer='adam', lr=0.001, final_lr=0.0001, momentum=0.9,
+                  beta1=0.9, beta2=0.99, gamma=0.1):
     name = {
         'sgd': 'lr{}-momentum{}'.format(lr, momentum),
         'adagrad': 'lr{}'.format(lr),
