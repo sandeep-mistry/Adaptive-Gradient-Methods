@@ -171,7 +171,7 @@ parser = get_parser()
 args = parser.parse_args()
 
 train_loader, test_loader = build_dataset()
-device = 'cuda:1' if torch.cuda.is_available() else 'cpu'
+device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
 ckpt_name = get_ckpt_name(model=args.model, optimizer=args.optim, lr=args.lr,
                               final_lr=args.final_lr, momentum=args.momentum,
