@@ -94,8 +94,7 @@ def create_optimizer(model_params):
                           weight_decay=weights, amsgrad=True)
     elif optim_choice == 'adabound':
         return AdaBound(model_params, learning_rate, betas=(beta_1, beta_2),
-                        final_lr=final_learning_rate, gamma=gamma_choice,
-                        weight_decay=weights)
+                        final_lr=final_learning_rate, gamma=gamma_choice)
     else:
         assert optim_choice == 'amsbound'
         return AdaBound(model_params, learning_rate, betas=(beta_1, beta_2),
