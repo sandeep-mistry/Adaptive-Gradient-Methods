@@ -21,8 +21,8 @@ beta_2 = 0.999
 resumed = '-r'
 weights = 5e-4
 gamma_choice = 0.1
-epochs = 50
-step = 37
+epochs = 5
+step = 2
 
 def build_dataset():
     print('==> Preparing data..')
@@ -61,15 +61,6 @@ def get_ckpt_name(model=model_choice, optimizer=optim_choice, lr=learning_rate, 
         'amsbound': 'lr{}-betas{}-{}-final_lr{}-gamma{}'.format(lr, beta1, beta2, final_lr, gamma),
     }[optimizer]
     return '{}-{}-{}'.format(model, optimizer, name)
-
-
-def load_checkpoint(ckpt_name):
-    print('==> Resuming from checkpoint..')
-    path = os.path.join('checkpoint', ckpt_name)
-    assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
-    assert os.path.exists(path), 'Error: checkpoint {} not found'.format(ckpt_name)
-    return torch.load(ckpt_name)
-
 
 def build_model(device, ckpt=None):
     print('==> Building model..')
