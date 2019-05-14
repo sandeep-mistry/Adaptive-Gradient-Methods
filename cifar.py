@@ -21,8 +21,8 @@ beta_2 = 0.999
 resumed = '-r'
 weights = 5e-4
 gamma_choice = 0.1
-epochs = 5
-step = 2
+epochs = 50
+step = 37
 
 def build_dataset():
     print('==> Preparing data..')
