@@ -67,7 +67,6 @@ def build_model(device, ckpt=None):
     net = {
         'resnet': ResNet34,
         'densenet': DenseNet121,
-        'Alexnet' : Alex,
     }[model_choice]()
     net = net.to(device)
     if device == 'cuda':
