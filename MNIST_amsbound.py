@@ -99,7 +99,7 @@ def create_optimizer(model_params):
         assert optim_choice == 'amsbound'
         return AdaBound(model_params, learning_rate, betas=(beta_1, beta_2),
                         final_lr=final_learning_rate, gamma=gamma_choice,
-                        weight_decay=weights, amsbound=True)
+                         amsbound=True)
 
 
 def train(net, epoch, device, data_loader, optimizer, criterion):
