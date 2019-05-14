@@ -12,8 +12,8 @@ from models import *
 from adabound import AdaBound
 
 
-learning_rate = 0.001
-final_learning_rate = 0.001
+learning_rate = 0.1
+final_learning_rate = 0.1
 model_choice = 'SLP_model'  # 'resnet', 'densenet', 'SLP_Model'
 optim_choice = 'adabound'  # 'sgd', 'adagrad', 'adam', 'amsgrad', 'adabound', 'amsbound'
 momentum_choice = 0.9
