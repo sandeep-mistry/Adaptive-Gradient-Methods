@@ -83,8 +83,7 @@ def build_model(device, ckpt=None):
 
 def create_optimizer(model_params):
     if optim_choice == 'sgd':
-        return optim.SGD(model_params, learning_rate, momentum=momentum_choice,
-                         weight_decay=weights)
+        return optim.SGD(model_params, learning_rate, momentum=momentum_choice)
     elif optim_choice == 'adagrad':
         return optim.Adagrad(model_params, learning_rate,  weight_decay=0.0)
     elif optim_choice == 'adam':
