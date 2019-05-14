@@ -20,7 +20,7 @@ def get_parser():
     parser = argparse.ArgumentParser(description='PyTorch Penn Treebank Training')
     parser.add_argument('--model', default='One_Layer_LSTM', type=str, help='model',
                         choices=['One_Layer_LSTM','Two_Layer_LSTM','Three_Layer_LSTM'])
-    parser.add_argument('--optim', default='adam', type=str, help='optimizer',
+    parser.add_argument('--optim', default='sgd', type=str, help='optimizer',
                         choices=['sgd','adam','adabound', 'amsbound'])
     parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
     parser.add_argument('--final_lr', default=0.001, type=float,
@@ -63,7 +63,7 @@ ids = corpus.get_data('data/train.txt', batch_size)
 vocab_size = len(corpus.dictionary)
 num_batches = ids.size(1) // seq_length
 
-def get_ckpt_name(model='One_Layer_LSTM', optimizer='adam', lr=learning_rate, final_lr=final_learning_rate, momentum=0.9,
+def get_ckpt_name(model='One_Layer_LSTM', optimizer='sgd', lr=learning_rate, final_lr=final_learning_rate, momentum=0.9,
                   beta1=beta_1, beta2=beta_2, gamma=0.1):
     name = {
         'sgd': 'lr{}-momentum{}'.format(lr, momentum),
@@ -108,17 +108,17 @@ def build_model(args, device, ckpt=None):
 
 def create_optimizer(args, model_params):
     if args.optim == 'sgd':
-        return optim.SGD(model_params, args.lr, momentum=args.momentum)
+        return optim.SGD(model_params, lr=learning_rate, momentum=0.9)
     elif args.optim == 'adam':
-        return optim.Adam(model_params, lr=args.lr, betas=(args.beta1, args.beta2), weight_decay=args.weight_decay)
+        return optim.Adam(model_params, lr=args.lr, betas=(args.beta1, args.beta2))
     elif args.optim == 'adabound':
-        return AdaBound(model_params, args.lr, betas=(args.beta1, args.beta2),
-                        final_lr=args.final_lr, gamma=args.gamma)
+        return AdaBound(model_params, lr=0.1, betas=(0.9, 0.99),
+                        final_lr=0.1, gamma=args.gamma)
 
     else:
         assert args.optim == 'amsbound'
-        return AdaBound(model_params, args.lr, betas=(args.beta1, args.beta2),
-                        final_lr=args.final_lr, gamma=args.gamma,
+        return AdaBound(model_params, lr=0.1, betas=(0.9, 0.99),
+                        final_lr=0.1, gamma=args.gamma,
                          amsbound=True)
 
 
