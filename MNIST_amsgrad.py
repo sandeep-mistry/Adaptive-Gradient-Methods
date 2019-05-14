@@ -90,8 +90,7 @@ def create_optimizer(model_params):
         return optim.Adam(model_params, learning_rate, betas=(beta_1, beta_2),
                           weight_decay=weights)
     elif optim_choice == 'amsgrad':
-        return optim.Adam(model_params, learning_rate, betas=(beta_1, beta_2),
-                          weight_decay=weights, amsgrad=True)
+        return optim.Adam(model_params, learning_rate, betas=(beta_1, beta_2), amsgrad=True)
     elif optim_choice == 'adabound':
         return AdaBound(model_params, learning_rate, betas=(beta_1, beta_2),
                         final_lr=final_learning_rate, gamma=gamma_choice)
