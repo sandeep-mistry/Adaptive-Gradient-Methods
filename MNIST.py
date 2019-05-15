@@ -1,75 +1,55 @@
 """Train MNIST with PyTorch."""
 from __future__ import print_function
-import torch
+
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
 import torchvision
 import torchvision.transforms as transforms
 
 import os
-import argparse
 
 from models import *
-
 from adabound import AdaBound
 
 
-def get_parser():
-    parser = argparse.ArgumentParser(description='PyTorch MNIST Training')
-    parser.add_argument('--model', default='Simple_MLP', type=str, help='model',
-                        choices=['resnet', 'densenet', 'Simple_MLP','MLP_Dropout','SLP_model'])
-    parser.add_argument('--optim', default='amsbound', type=str, help='optimizer',
-                        choices=['sgd', 'adagrad', 'adam', 'amsgrad', 'adabound', 'amsbound'])
-    parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
-    parser.add_argument('--final_lr', default=0.01, type=float,
-                        help='final learning rate of AdaBound')
-    parser.add_argument('--gamma', default=0.1, type=float,
-                        help='convergence speed term of AdaBound')
-    parser.add_argument('--momentum', default=0.9, type=float, help='momentum term')
-    parser.add_argument('--beta1', default=0.9, type=float, help='Adam coefficients beta_1')
-    parser.add_argument('--beta2', default=0.999, type=float, help='Adam coefficients beta_2')
-    parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
-    parser.add_argument('--weight_decay', default=5e-4, type=float,
-                        help='weight decay for optimizers')
-    return parser
+learning_rate = 0.05
+final_learning_rate = 0.05
+model_choice = 'SLP_Model'  # 'resnet', 'densenet', 'SLP_Model'
+optim_choice = 'sgd'  # 'sgd', 'adagrad', 'adam', 'amsgrad', 'adabound', 'amsbound'
+momentum_choice = 0.9
+beta_1 = 0.99
+beta_2 = 0.999
+resumed = '-r'
+weights = 0.0001
+gamma_choice = 0.1
+epochs = 100
+
 
 
 def build_dataset(): 
     print('==> Preparing data..')
     transform_train = transforms.Compose([
-        # transforms.RandomCrop(32, padding=4),
-        # transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
-        # transforms.Normalize((0.4914), (0.2023)),
     ])
 
     transform_test = transforms.Compose([
         transforms.ToTensor(),
         transforms.Lambda(lambda x: x.view(-1))
-        # transforms.Normalize((0.4914), (0.2023)),
     ])
 
-#     trainset = torchvision.datasets.MNIST(root='./data', train=True, download=True,
-#                                             transform=transform_train)
-#     train_loader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True)
-
-#     testset = torchvision.datasets.MNIST(root='./data', train=False, download=True,
-#                                            transform=transform_test)
-#     test_loader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False)
-
-    trainset = torchvision.datasets.FashionMNIST(root='./data', train=True, download=True,
+    trainset = torchvision.datasets.MNIST(root='./data', train=True, download=True,
                                             transform=transform_train)
     train_loader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True)
 
-    testset = torchvision.datasets.FashionMNIST(root='./data', train=False, download=True,
+    testset = torchvision.datasets.MNIST(root='./data', train=False, download=True,
                                            transform=transform_test)
     test_loader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False)
 
     return train_loader, test_loader
 
 
-def get_ckpt_name(model='Simple_MLP', optimizer='amsbound', lr=0.001, final_lr=0.01, momentum=0.9,
-                  beta1=0.9, beta2=0.999, gamma=0.1):
+def get_ckpt_name(model=model_choice, optimizer=optim_choice, lr=learning_rate, final_lr=final_learning_rate, momentum=momentum_choice,
+                  beta1=beta_1, beta2=beta_2, gamma=gamma_choice):
     name = {
         'sgd': 'lr{}-momentum{}'.format(lr, momentum),
         'adagrad': 'lr{}'.format(lr),
@@ -81,15 +61,7 @@ def get_ckpt_name(model='Simple_MLP', optimizer='amsbound', lr=0.001, final_lr=0
     return '{}-{}-{}'.format(model, optimizer, name)
 
 
-def load_checkpoint(ckpt_name):
-    print('==> Resuming from checkpoint..')
-    path = os.path.join('checkpoint', ckpt_name)
-    assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
-    assert os.path.exists(path), 'Error: checkpoint {} not found'.format(ckpt_name)
-    return torch.load(ckpt_name)
-
-
-def build_model(args, device, ckpt=None):
+def build_model(device, ckpt=None):
     print('==> Building model..')
     net = {
         'resnet': ResNet34,
@@ -97,7 +69,7 @@ def build_model(args, device, ckpt=None):
         'Simple_MLP': MLP,
         'MLP_Dropout': MLP_drop,
         'SLP_model': S_L_P,
-    }[args.model]()
+    }[model_choice]()
     net = net.to(device)
     if device == 'cuda':
         net = torch.nn.DataParallel(net)
@@ -109,34 +81,26 @@ def build_model(args, device, ckpt=None):
     return net
 
 
-def create_optimizer(args, model_params):
-    if args.optim == 'sgd':
-#         return optim.SGD(model_params, args.lr, momentum=args.momentum,
-#                          weight_decay=args.weight_decay)
-        return optim.SGD(model_params, args.lr, momentum=args.momentum)
-    elif args.optim == 'adagrad':
-        return optim.Adagrad(model_params, args.lr)#, weight_decay=args.weight_decay)
-    elif args.optim == 'adam':
-#         return optim.Adam(model_params, args.lr, betas=(args.beta1, args.beta2),
-#                           weight_decay=args.weight_decay)
-        return optim.Adam(model_params, args.lr, betas=(args.beta1, args.beta2))
-    elif args.optim == 'amsgrad':
-#         return optim.Adam(model_params, args.lr, betas=(args.beta1, args.beta2),
-#                           weight_decay=args.weight_decay, amsgrad=True)
-        return optim.Adam(model_params, args.lr, betas=(args.beta1, args.beta2),
-                          amsgrad=True)
-    elif args.optim == 'adabound':
-        return AdaBound(model_params, args.lr, betas=(args.beta1, args.beta2),
-                        final_lr=args.final_lr, gamma=args.gamma)
-#                         weight_decay=args.weight_decay)
+def create_optimizer(model_params):
+    if optim_choice == 'sgd':
+        return optim.SGD(model_params, learning_rate, momentum=momentum_choice,weight_decay=weights)
+    elif optim_choice == 'adagrad':
+        return optim.Adagrad(model_params, learning_rate,  weight_decay=0.0)
+    elif optim_choice == 'adam':
+        return optim.Adam(model_params, learning_rate, betas=(beta_1, beta_2),
+                          weight_decay=weights)
+    elif optim_choice == 'amsgrad':
+        return optim.Adam(model_params, learning_rate, betas=(beta_1, beta_2),
+                          weight_decay=weights, amsgrad=True)
+    elif optim_choice == 'adabound':
+        return AdaBound(model_params, learning_rate, betas=(beta_1, beta_2),
+                        final_lr=final_learning_rate, gamma=gamma_choice,
+                        weight_decay=weights)
     else:
-        assert args.optim == 'amsbound'
-#         return AdaBound(model_params, args.lr, betas=(args.beta1, args.beta2),
-#                         final_lr=args.final_lr, gamma=args.gamma,
-#                         weight_decay=args.weight_decay, amsbound=True)
-        return AdaBound(model_params, args.lr, betas=(args.beta1, args.beta2),
-                        final_lr=args.final_lr, gamma=args.gamma,
-                         amsbound=True)
+        assert optim_choice == 'amsbound'
+        return AdaBound(model_params, learning_rate, betas=(beta_1, beta_2),
+                        final_lr=final_learning_rate, gamma=gamma_choice,
+                        weight_decay=weights, amsbound=True)
 
 
 def train(net, epoch, device, data_loader, optimizer, criterion):
@@ -185,49 +149,38 @@ def test(net, device, data_loader, criterion):
 
     return accuracy
 
-parser = get_parser()
-args = parser.parse_args()
+
 
 train_loader, test_loader = build_dataset()
-device = 'cuda:1' if torch.cuda.is_available() else 'cpu'
+device = 'cuda:2' if torch.cuda.is_available() else 'cpu'
 
-ckpt_name = get_ckpt_name(model=args.model, optimizer=args.optim, lr=args.lr,
-                              final_lr=args.final_lr, momentum=args.momentum,
-                              beta1=args.beta1, beta2=args.beta2, gamma=args.gamma)
-if args.resume:
-    ckpt = load_checkpoint(ckpt_name)
-    best_acc = ckpt['acc']
-    start_epoch = ckpt['epoch']
-else:
-    ckpt = None
-    best_acc = 0
-    start_epoch = -1
+ckpt_name = get_ckpt_name(model=model_choice, optimizer=optim_choice, lr=learning_rate,
+                              final_lr=final_learning_rate, momentum=momentum_choice,
+                              beta1=beta_1, beta2=beta_2, gamma=gamma_choice)
 
-net = build_model(args, device, ckpt=ckpt)
+ckpt = None
+best_acc = 0
+start_epoch = -1
+
+net = build_model(device, ckpt=ckpt)
 criterion = nn.CrossEntropyLoss()
-optimizer = create_optimizer(args, net.parameters())
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=75, gamma=0.1,
-                                          last_epoch=start_epoch)
+optimizer = create_optimizer(net.parameters())
 
 train_accuracies = []
 test_accuracies = []
 
-for epoch in range(start_epoch + 1, 100):
-    scheduler.step()
+for epoch in range(start_epoch + 1, epochs):
     train_acc = train(net, epoch, device, train_loader, optimizer, criterion)
     test_acc = test(net, device, test_loader, criterion)
 
 # Save checkpoint.
+
     print('Saving..')
     state = {
         'net': net.state_dict(),
         'acc': test_acc,
         'epoch': epoch,
     }
-    if not os.path.isdir('checkpoint'):
-         os.mkdir('checkpoint')
-    torch.save(state, os.path.join('checkpoint', ckpt_name))
-    best_acc = test_acc
 
     train_accuracies.append(train_acc)
     test_accuracies.append(test_acc)
@@ -235,8 +188,3 @@ for epoch in range(start_epoch + 1, 100):
         os.mkdir('curve')
     torch.save({'train_acc': train_accuracies, 'test_acc': test_accuracies},
                 os.path.join('curve', ckpt_name))
-       
-
-
-
-
