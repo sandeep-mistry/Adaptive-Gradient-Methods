@@ -107,7 +107,7 @@ def detach(states):
 
 
 if torch.cuda.is_available():
-    device = torch.device('cuda:0')
+    device = torch.device('cuda:2')
     print("Running with GPU Acceleration")
 else:
     device = torch.device('cpu')
