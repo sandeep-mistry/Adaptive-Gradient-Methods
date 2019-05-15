@@ -72,7 +72,7 @@ def build_model(device, ckpt=None):
     net = {
         'One_Layer_LSTM': RNNLM,
         'Two_Layer_LSTM': RNNLM_2,
-        'Thre_Layer_LSTM': RNNLM_3,
+        'Three_Layer_LSTM': RNNLM_3,
     }[model_choice](vocab_size, embed_size, hidden_size, num_layers)
     net = net.to(device)
     if device == 'cuda':
