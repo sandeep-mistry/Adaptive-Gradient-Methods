@@ -12,8 +12,8 @@ from models import *
 from adabound import AdaBound
 
 
-learning_rate = 0.1
-final_learning_rate = 0.1
+learning_rate = 0.001
+final_learning_rate = 0.001
 model_choice = 'SLP_model'  # 'resnet', 'densenet', 'SLP_Model'
 optim_choice = 'adabound'  # 'sgd', 'adagrad', 'adam', 'amsgrad', 'adabound', 'amsbound'
 momentum_choice = 0.9
@@ -92,7 +92,7 @@ def create_optimizer(model_params):
                           weight_decay=weights, amsgrad=True)
     elif optim_choice == 'adabound':
         return AdaBound(model_params, learning_rate, betas=(beta_1, beta_2),
-                        final_lr=final_learning_rate, gamma=gamma_choice)
+                        final_lr=final_learning_rate, gamma=gamma_choice,weight_decay=weights)
     else:
         assert optim_choice == 'amsbound'
         return AdaBound(model_params, learning_rate, betas=(beta_1, beta_2),
