@@ -1,2 +1,5 @@
 __pycache__/*
 .idea/*
+sample.txt
+checkpoint/*
+*.ckpt

@@ -18,7 +18,7 @@ import torch.optim as optim
 
 def get_parser():
     parser = argparse.ArgumentParser(description='PyTorch Penn Treebank Training')
-    parser.add_argument('--model', default='One_Layer_LSTM', type=str, help='model',
+    parser.add_argument('--model', default='Two_Layer_LSTM', type=str, help='model',
                         choices=['One_Layer_LSTM','Two_Layer_LSTM','Three_Layer_LSTM'])
     parser.add_argument('--optim', default='sgd', type=str, help='optimizer',
                         choices=['sgd','adam','adabound', 'amsbound'])
@@ -51,7 +51,7 @@ num_epochs = 50
 num_samples = 1000  # number of words to be sampled
 batch_size = 20
 seq_length = 30
-learning_rate = 0.001
+learning_rate = 10
 final_learning_rate = 0.0001
 step_size = 37
 beta_1 = 0.9
@@ -63,7 +63,7 @@ ids = corpus.get_data('data/train.txt', batch_size)
 vocab_size = len(corpus.dictionary)
 num_batches = ids.size(1) // seq_length
 
-def get_ckpt_name(model='One_Layer_LSTM', optimizer='sgd', lr=learning_rate, final_lr=final_learning_rate, momentum=0.9,
+def get_ckpt_name(model='Two_Layer_LSTM', optimizer='sgd', lr=learning_rate, final_lr=final_learning_rate, momentum=0.9,
                   beta1=beta_1, beta2=beta_2, gamma=0.1):
     name = {
         'sgd': 'lr{}-momentum{}'.format(lr, momentum),

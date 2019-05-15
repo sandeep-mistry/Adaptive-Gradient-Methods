@@ -1,5 +1,6 @@
 # Some part of the code was referenced from below.
 # https://github.com/pytorch/examples/tree/master/word_language_model
+from __future__ import print_function
 import torch
 import torch.nn as nn
 import numpy as np
@@ -11,7 +12,7 @@ from models.Three_Layer_LSTM import RNNLM_3
 from adabound import AdaBound
 import os
 import argparse
-from __future__ import print_function
+import matplotlib.pyplot as plt
 
 
 if torch.cuda.is_available():
@@ -37,7 +38,7 @@ ids = corpus.get_data('data/train.txt', batch_size)
 vocab_size = len(corpus.dictionary)
 num_batches = ids.size(1) // seq_length
 
-model = RNNLM_3(vocab_size, embed_size, hidden_size, num_layers).to(device)
+model = RNNLM(vocab_size, embed_size, hidden_size, num_layers).to(device)
 
 # Loss and optimizer
 criterion = nn.CrossEntropyLoss()
@@ -48,6 +49,8 @@ optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 def detach(states):
     return [state.detach() for state in states]
 
+
+# perplexities = []
 
 # Train the model
 for epoch in range(num_epochs):
@@ -70,11 +73,15 @@ for epoch in range(num_epochs):
         loss.backward()
         clip_grad_norm_(model.parameters(), 0.5)
         optimizer.step()
+        # perplexity = np.exp(loss.item())
+        # perplexities.append(perplexity)
 
         step = (i + 1) // seq_length
         if step % 100 == 0:
+            perplexity = np.exp(loss.item())
+            # perplexities.append(perplexity)
             print('Epoch [{}/{}], Step[{}/{}], Loss: {:.4f}, Perplexity: {:5.2f}'
-                  .format(epoch + 1, num_epochs, step, num_batches, loss.item(), np.exp(loss.item())))
+                  .format(epoch + 1, num_epochs, step, num_batches, loss.item(), perplexity))
 
 # Test the model
 with torch.no_grad():
@@ -108,3 +115,6 @@ with torch.no_grad():
 
 # Save the model checkpoints
 torch.save(model.state_dict(), 'model.ckpt')
+
+# plt.plot(len(perplexities), perplexities)
+# plt.show()
