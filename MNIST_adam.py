@@ -15,13 +15,13 @@ from adabound import AdaBound
 
 learning_rate = 0.001
 final_learning_rate = 0.001
-model_choice = 'SLP_model'  # 'resnet', 'densenet', 'SLP_Model'
+model_choice = 'Simple_MLP'  # 'resnet', 'densenet', 'SLP_Model'
 optim_choice = 'adam'  # 'sgd', 'adagrad', 'adam', 'amsgrad', 'adabound', 'amsbound'
 momentum_choice = 0.9
 beta_1 = 0.9
 beta_2 = 0.99
 resumed = '-r'
-weights = 5e-4
+weights = 0.0001
 gamma_choice = 0.1
 epochs = 100
 
@@ -37,11 +37,11 @@ def build_dataset():
         transforms.Lambda(lambda x: x.view(-1))
     ])
 
-    trainset = torchvision.datasets.MNIST(root='./data', train=True, download=True,
+    trainset = torchvision.datasets.FashionMNIST(root='./data', train=True, download=True,
                                             transform=transform_train)
     train_loader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True)
 
-    testset = torchvision.datasets.MNIST(root='./data', train=False, download=True,
+    testset = torchvision.datasets.FashionMNIST(root='./data', train=False, download=True,
                                            transform=transform_test)
     test_loader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False)
 
