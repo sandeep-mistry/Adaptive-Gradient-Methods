@@ -1,4 +1,6 @@
-"""Train MNIST with PyTorch."""
+# Some part of the code was referenced from below.
+# https://github.com/pytorch/examples/tree/master/word_language_model
+
 from __future__ import print_function
 import numpy as np
 from torch.nn.utils import clip_grad_norm_
@@ -14,18 +16,6 @@ import os
 from models import *
 from adabound import AdaBound
 
-
-# learning_rate = 0.05
-# final_learning_rate = 0.05
-# model_choice = 'One_Layer_LSTM'  # 'Two_Layer_LSTM', 'Three_Layer_LSTM'
-# optim_choice = 'sgd'  # 'sgd', 'adagrad', 'adam', 'amsgrad', 'adabound', 'amsbound'
-# momentum_choice = 0.9
-# beta_1 = 0.99
-# beta_2 = 0.999
-# resumed = '-r'
-# weights = 1.2e-06
-# gamma_choice = 0.1
-# epochs = 1
 
 # Hyper-parameters
 model_choice = 'One_Layer_LSTM'  # 'Two_Layer_LSTM', 'Three_Layer_LSTM'
@@ -47,7 +37,7 @@ beta_1 = 0.9
 beta_2 = 0.99
 
 
-
+# Get dataset
 corpus = Corpus()
 ids = corpus.get_data('data/train.txt', batch_size)
 vocab_size = len(corpus.dictionary)
@@ -124,15 +114,11 @@ start_epoch = -1
 net = build_model(device, ckpt=ckpt)
 criterion = nn.CrossEntropyLoss()
 optimizer = create_optimizer(net.parameters())
-
-# scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=0.1,
-#                                           last_epoch=start_epoch)
-
+                                    last_epoch=start_epoch)
 train_perplexities = []
 
 # Train the model
 for epoch in range(start_epoch + 1, num_epochs):
-    # scheduler.step()
     # Set initial hidden and cell states
     states = (torch.zeros(num_layers, batch_size, hidden_size).to(device),
               torch.zeros(num_layers, batch_size, hidden_size).to(device))
@@ -152,11 +138,9 @@ for epoch in range(start_epoch + 1, num_epochs):
         loss.backward()
         clip_grad_norm_(net.parameters(), 0.5)
         optimizer.step()
-        # perplexity = np.exp(loss.item())
 
         step = (i + 1) // seq_length
         if step % 100 == 0:
-            # perplexity = np.exp(loss.item())
             print('Epoch [{}/{}], Step[{}/{}], Loss: {:.4f}, Perplexity: {:5.2f}'
                   .format(epoch + 1, num_epochs, step, num_batches, loss.item(), np.exp(loss.item())))
 # Save checkpoint.
@@ -173,7 +157,6 @@ for epoch in range(start_epoch + 1, num_epochs):
     best_acc = perplexity
 
     train_perplexities.append(perplexity)
-    # test_accuracies.append(test_acc)
     if not os.path.isdir('curve'):
         os.mkdir('curve')
     torch.save({'train_acc': train_perplexities},
