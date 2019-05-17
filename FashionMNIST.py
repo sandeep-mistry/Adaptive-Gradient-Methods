@@ -39,26 +39,14 @@ def get_parser():
 def build_dataset():
     print('==> Preparing data..')
     transform_train = transforms.Compose([
-        # transforms.RandomCrop(32, padding=4),
-        # transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
-        # transforms.Normalize((0.4914), (0.2023)),
     ])
 
     transform_test = transforms.Compose([
         transforms.ToTensor(),
         transforms.Lambda(lambda x: x.view(-1))
-        # transforms.Normalize((0.4914), (0.2023)),
     ])
 
-    # trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True,
-    #                                         transform=transform_train)
-    # train_loader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True,
-    #                                            num_workers=2)
-    #
-    # testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True,
-    #                                        transform=transform_test)
-    # test_loader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=2)
 
     trainset = torchvision.datasets.FashionMNIST(root='./data', train=True, download=True,
                                             transform=transform_train)
@@ -67,16 +55,6 @@ def build_dataset():
     testset = torchvision.datasets.FashionMNIST(root='./data', train=False, download=True,
                                            transform=transform_test)
     test_loader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False)
-
-    # classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
-    # trainset = torchvision.datasets.SVHN(root='./data', train=True, download=True,
-    #                                         transform=transform_train)
-    # train_loader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True,
-    #                                            num_workers=2)
-    #
-    # testset = torchvision.datasets.SVHN(root='./data', train=False, download=True,
-    #                                        transform=transform_test)
-    # test_loader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=2)
 
     return train_loader, test_loader
 
@@ -124,24 +102,17 @@ def build_model(args, device, ckpt=None):
 
 def create_optimizer(args, model_params):
     if args.optim == 'sgd':
-#         return optim.SGD(model_params, args.lr, momentum=args.momentum,
-#                          weight_decay=args.weight_decay)
         return optim.SGD(model_params, args.lr, momentum=args.momentum)
     elif args.optim == 'adagrad':
         return optim.Adagrad(model_params, args.lr)#, weight_decay=args.weight_decay)
     elif args.optim == 'adam':
-#         return optim.Adam(model_params, args.lr, betas=(args.beta1, args.beta2),
-#                           weight_decay=args.weight_decay)
         return optim.Adam(model_params, args.lr, betas=(args.beta1, args.beta2))
     elif args.optim == 'amsgrad':
-#         return optim.Adam(model_params, args.lr, betas=(args.beta1, args.beta2),
-#                           weight_decay=args.weight_decay, amsgrad=True)
         return optim.Adam(model_params, args.lr, betas=(args.beta1, args.beta2),
                           amsgrad=True)
     elif args.optim == 'adabound':
         return AdaBound(model_params, args.lr, betas=(args.beta1, args.beta2),
                         final_lr=args.final_lr, gamma=args.gamma)
-#                         weight_decay=args.weight_decay)
     else:
         assert args.optim == 'amsbound'
         return AdaBound(model_params, args.lr, betas=(args.beta1, args.beta2),
