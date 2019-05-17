@@ -9,7 +9,7 @@ New variants of Adam and AMSGrad, called AdaBound and AMSBound, were introduced 
 # Requirement
 see file requirements.txt
 
-# ReadMe
+# Usage
 Please see visualisation.py and enter appropriate [model_name] first, then:
 
 ```
