@@ -13,7 +13,7 @@ Required Credentials
     You should now be connected to the GPU server. 
 
 2. Clone Repo
-    Run `git clone https://git.soton.ac.uk/sbm1g18/gradient-methods.git`
+    Run `git clone https://github.com/sandeep-mistry/Adaptive-Gradient-Methods.git`
     Enter required credentials for gitlab (should be the same as above)
     The repo should now have been cloned.
     
