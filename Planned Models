@@ -1,4 +1,0 @@
-MNIST -> Greyscale -> 1 Layer Perceptron (Jesus)
-FashionMNIST -> Greyscale -> 1-2-1 MLP (Sandeep)
-CIFAR10/SVHN -> RGB -> DenseNet-121, ResNet-34, AlexNet, VGG16 (Michelle)
-Penn Treebank/IMDB -> Text -> 1 layer LSTM, 2 Layer LSTM, 3 layer LSTM, LSTM with MLP, CNN
