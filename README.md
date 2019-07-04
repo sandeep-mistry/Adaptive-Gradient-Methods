@@ -1,5 +1,5 @@
 
-# Adaptive Gradient Methods With Dynamic Bound of Learning Rate Reprodicibility Challenge
+# Adaptive Gradient Methods With Dynamic Bound of Learning Rate Reproducibility Challenge
 - Chosen paper title: ADAPTIVE GRADIENT METHODS WITH DYNAMIC BOUND OF LEARNING RATE
 - OpenReview URL of chosen paper: https://openreview.net/pdf?id=Bkg3g2R9FX
 
