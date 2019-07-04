@@ -19,8 +19,7 @@ Required Credentials
     
 3. Run setup
     Move into the repo folder ('cd gradient-methods').
-    Execute './setup.sh'
-    If you get error "Permission denied", run 'chmod 755 setup.sh', then execute './setup.sh'
+    Execute './setup.sh
     This will also initialise a Conda environment.
 
 4. Activate Conda environment
@@ -29,7 +28,6 @@ Required Credentials
 
 5. Install required packages
     Execute './setup_env.sh'
-    If you get error "Permission denied", run 'chmod 755 setup_env.sh', then execute './setup_env.sh'
     This will install all the packages in requirements.txt
 
 6. Running code
