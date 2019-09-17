@@ -8,6 +8,9 @@
 New variants of Adam and AMSGrad, called AdaBound and AMSBound, were introduced by Luo et al. (2019) and employed dynamic bounds on learning rates to achieve a smooth and gradual transition from adaptive methods to SGD. We attempted to reproduce their experimental results on various popular tasks and models, however only managed partial reproduction, specifically using feedforward and convolutional neural network models.
 
 # Requirements
+
+Python 3.6.8 was used during this project.
+
 ```
 pip install -r requirements.txt
 ```
